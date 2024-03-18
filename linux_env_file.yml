@@ -1,4 +1,4 @@
-name: data_video_player
+name: PyVideoPlayer
 channels:
   - defaults
 dependencies:
@@ -24,9 +24,7 @@ dependencies:
   - xz=5.4.5=h5eee18b_0
   - zlib=1.2.13=h5eee18b_0
   - pip:
-      - numpy==1.26.4
       - opencv-python==4.9.0.80
-      - pillow==10.2.0
       - pynput==1.7.5
       - python-xlib==0.33
       - decord==0.6.0

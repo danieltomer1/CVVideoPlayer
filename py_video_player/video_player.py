@@ -6,9 +6,11 @@ import cv2
 import Xlib.display
 from pynput import keyboard, mouse
 
+import platform
 from .frame_editors.abstract_frame_editor import AbstractFrameEditor
 from .image_reader import AbstractImageReader
-from .utils.video_player_utils import get_keyboard_layout, get_screen_adjusted_frame_size, get_screen_size, KeymapAction
+from .utils.video_player_utils import get_keyboard_layout, get_screen_adjusted_frame_size, get_screen_size, \
+    get_forground_window_pid, KeymapAction
 from .recorder import Recorder
 
 
@@ -36,6 +38,7 @@ class VideoPlayer:
         self._keyboard_layout = get_keyboard_layout()
         self._number_action_registered = False
         self._play = False
+        self._display = Xlib.display.Display() if platform.system() == "Linux" else None
 
         self._screen_size = get_screen_size()
         self._keymap = self._create_basic_keymap()
@@ -54,6 +57,7 @@ class VideoPlayer:
         frame_editor.setup(self._current_frame)
         self._frame_editors.append(frame_editor)
         self._show_current_frame()
+        self._window_pid = get_forground_window_pid() if platform.system() == "Windows" else self._video_name
 
     def register_keymap_action(self, key: str, func: Callable, desc: str):
         if "+" in key:
@@ -88,14 +92,23 @@ class VideoPlayer:
             )
         self._keymap[key] = KeymapAction(func, desc)
 
+    def _get_in_focus_window_name(self):
+        if platform.system() == "Linux":
+            window = self._display.get_input_focus().focus
+            if isinstance(window, int):
+                return ""
+            return window.get_wm_name()
+
+        elif platform.system() == "Windows":
+            return get_forground_window_pid()
+
     def run(self):
         self._print_keymap()
-        disp = Xlib.display.Display()
         queue = Queue()
 
         def on_press(key):
-            window = disp.get_input_focus().focus
-            if isinstance(window, int) or not window.get_wm_name() == self._video_name:
+
+            if self._get_in_focus_window_name() != self._window_pid:
                 return
 
             if self._keyboard_layout == "Hebrew":
@@ -122,9 +135,6 @@ class VideoPlayer:
                 queue.put(("press", key))
 
         def on_release(key):
-            window = disp.get_input_focus().focus
-            if not window.get_wm_name() == self._video_name:
-                return
             if key in {
                 keyboard.Key.ctrl,
                 keyboard.Key.ctrl_r,
@@ -139,10 +149,14 @@ class VideoPlayer:
                 key = str(key).replace("Key.", "").split("_")[0]
                 if str(key) in self._modifiers:
                     self._modifiers.remove(key)
-            elif key == keyboard.Key.space:
                 return
-            else:
-                queue.put(("release", key))
+
+            if not self._get_in_focus_window_name() == self._video_name:
+                return
+
+            if key == keyboard.Key.space:
+                return
+            queue.put(("release", key))
 
         def on_mouse_click(x, y, button, pressed):
             if queue.empty():  # To avoid a situation of execution build up due to slow execution time
@@ -218,6 +232,7 @@ class VideoPlayer:
 
         cv2.imshow(winname=self._video_name, mat=frame)
         cv2.waitKey(1)
+        cv2.waitKey(1)
 
     def _next_frame(self, num_frames_to_skip=1):
         if self._frame_num == self._last_frame:
@@ -247,6 +262,10 @@ class VideoPlayer:
             str(key_without_modifiers) == "<65437>"
         ):  # work around for a bug in pynput model that does not convert 5 for some reason
             key_without_modifiers = "5"
+
+        if hasattr(key_without_modifiers, "vk"):
+            key_without_modifiers = chr(key_without_modifiers.vk).lower()
+
         key_without_modifiers = str(key_without_modifiers).replace("'", "").replace("Key.", "")
 
         if str(key_without_modifiers).isnumeric():
