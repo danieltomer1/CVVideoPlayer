@@ -1,10 +1,18 @@
-import numpy as np
+from typing import Union
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 from .base_frame_editor import BaseFrameEditor
 
 
 class FrameNormalizer(BaseFrameEditor):
-    def __init__(self, enable_by_default: bool = True, range_min="", range_max=""):
+    def __init__(
+        self,
+        enable_by_default: bool = True,
+        range_min: Union[str, int] = "",
+        range_max: Union[str, int] = "",
+    ):
         super().__init__(enable_by_default)
         self._range_min = range_min
         self._range_max = range_max

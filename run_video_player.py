@@ -1,5 +1,6 @@
 from pathlib import Path
-from py_video_player import ImageReader, Recorder, VideoPlayer, FrameNormalizer, FrameNumPrinter, HistogramEqualizer
+
+from py_video_player import ImageReader, Recorder, VideoPlayer
 
 CONFIG = {
     "data_source": "local_video_path",
@@ -36,36 +37,6 @@ def run_player():
         video_name=video_name,
         image_reader=image_reader,
         recorder=recorder,
-    )
-
-    frame_num_printer = FrameNumPrinter()
-    video_player.add_frame_editor(frame_num_printer)
-    video_player.register_keymap_action(
-        key="ctrl+f",
-        func=frame_num_printer.enable_disable,
-        desc="enable/disable frame number print",
-    )
-
-    frame_normalizer = FrameNormalizer()
-    video_player.add_frame_editor(frame_normalizer)
-    video_player.register_keymap_action(
-        key="ctrl+r",
-        func=frame_normalizer.set_dynamic_range,
-        desc="set dynamic range",
-    )
-
-    video_player.register_keymap_action(
-        key="ctrl+alt+r",
-        func=frame_normalizer.show_frame_histogram,
-        desc="show frame histogram",
-    )
-
-    histogram_equalizer = HistogramEqualizer()
-    video_player.add_frame_editor(histogram_equalizer)
-    video_player.register_keymap_action(
-        key="ctrl+h",
-        func=histogram_equalizer.enable_disable,
-        desc="enable/disable histogram equalization",
     )
 
     with video_player:

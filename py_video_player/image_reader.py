@@ -1,10 +1,9 @@
+import abc
 import random
 from pathlib import Path
 from typing import Optional
 
 import cv2
-import abc
-
 import numpy as np
 from decord import VideoReader, cpu
 

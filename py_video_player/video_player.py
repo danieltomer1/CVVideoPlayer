@@ -1,17 +1,22 @@
-import time
+import platform
 from queue import Queue
 from typing import *
 
-import cv2
 import Xlib.display
+import cv2
 from pynput import keyboard, mouse
 
-import platform
+from . import FrameNumPrinter, FrameNormalizer, HistogramEqualizer
 from .frame_editors.abstract_frame_editor import AbstractFrameEditor
 from .image_reader import AbstractImageReader
-from .utils.video_player_utils import get_keyboard_layout, get_screen_adjusted_frame_size, get_screen_size, \
-    get_forground_window_pid, KeymapAction
 from .recorder import Recorder
+from .utils.video_player_utils import (
+    get_keyboard_layout,
+    get_screen_adjusted_frame_size,
+    get_screen_size,
+    get_forground_window_pid,
+    KeymapAction,
+)
 
 
 class VideoPlayer:
@@ -21,6 +26,7 @@ class VideoPlayer:
         image_reader: AbstractImageReader,
         start_from_frame: int = 0,
         recorder: Optional[Recorder] = None,
+        add_basic_frame_editors: bool = True,
     ):
 
         self._video_name = video_name
@@ -42,7 +48,11 @@ class VideoPlayer:
 
         self._screen_size = get_screen_size()
         self._keymap = self._create_basic_keymap()
-        self._setup()
+        self._next_frame(1)
+        if add_basic_frame_editors:
+            self._add_basic_frame_editors()
+        self._show_current_frame()
+        self._window_pid = get_forground_window_pid() if platform.system() == "Windows" else self._video_name
 
     def __enter__(self):
         return self
@@ -57,9 +67,44 @@ class VideoPlayer:
         frame_editor.setup(self._current_frame)
         self._frame_editors.append(frame_editor)
         self._show_current_frame()
-        self._window_pid = get_forground_window_pid() if platform.system() == "Windows" else self._video_name
+
+    def add_frame_num_printer(self, key="ctrl+f"):
+        frame_num_printer = FrameNumPrinter()
+        self.add_frame_editor(frame_num_printer)
+        self.register_keymap_action(
+            key=key,
+            func=frame_num_printer.enable_disable,
+            desc="enable/disable frame number print",
+        )
+
+    def add_frame_normalizer(self, set_range_key="ctrl+r", show_histogram_key="ctrl+alt+r"):
+        frame_normalizer = FrameNormalizer()
+        self.add_frame_editor(frame_normalizer)
+        self.register_keymap_action(
+            key=set_range_key,
+            func=frame_normalizer.set_dynamic_range,
+            desc="set dynamic range",
+        )
+
+        self.register_keymap_action(
+            key=show_histogram_key,
+            func=frame_normalizer.show_frame_histogram,
+            desc="show frame histogram",
+        )
+
+    def add_histogram_equalizer(self, key="ctrl+h"):
+        histogram_equalizer = HistogramEqualizer()
+        self.add_frame_editor(histogram_equalizer)
+        self.register_keymap_action(
+            key=key,
+            func=histogram_equalizer.enable_disable,
+            desc="enable/disable histogram equalization",
+        )
 
     def register_keymap_action(self, key: str, func: Callable, desc: str):
+        assert (
+            "right" not in key and "left" not in key and "space" not in key
+        ), "right and left and space are reserved for video playing"
         if "+" in key:
             modifiers = sorted(key.split("+")[:-1])
             key_without_modifiers = key.split("+")[-1]
@@ -185,19 +230,16 @@ class VideoPlayer:
             if action == "release":
                 self._handle_keyboard_release(cur_key)
 
-    def _setup(self):
-        first_frame = self._current_frame = self._image_reader.get_frame(self._frame_num + 1)
-        for frame_editor in self._frame_editors:
-            frame_editor.setup(first_frame)
-
-        self._next_frame(1)
-        self._show_current_frame()
-        time.sleep(0.1)
-        self._show_current_frame()
+    def _add_basic_frame_editors(self):
+        self.add_frame_num_printer()
+        self.add_frame_normalizer()
+        self.add_histogram_equalizer()
 
     def _print_keymap(self):
+        print("space bar: Play/Pause video")
         for key, action in self._keymap.items():
             print(f"{key}: {action.description}")
+        print("***********************************")
 
     def _play_continuously(self, queue):
         while queue.empty() and self._play:
@@ -251,9 +293,11 @@ class VideoPlayer:
     def _create_basic_keymap(self) -> Dict[str, KeymapAction]:
         keymap = {
             "right": KeymapAction(func=lambda: self._next_frame(1), description="Go to next frame"),
-            "ctrl+right": KeymapAction(func=lambda: self._next_frame(50), description="Go 50 frames forward"),
             "left": KeymapAction(func=lambda: self._prev_frame(1), description="Go to previous frame"),
-            "ctrl+left": KeymapAction(func=lambda: self._prev_frame(50), description="Go 50 frames back"),
+            "ctrl+right": KeymapAction(func=lambda: self._next_frame(10), description="Go 10 frames forward"),
+            "ctrl+left": KeymapAction(func=lambda: self._prev_frame(10), description="Go 10 frames back"),
+            "ctrl+shift+right": KeymapAction(func=lambda: self._next_frame(50), description="Go 50 frames forward"),
+            "ctrl+shift+left": KeymapAction(func=lambda: self._prev_frame(50), description="Go 50 frames back"),
         }
         return keymap
 

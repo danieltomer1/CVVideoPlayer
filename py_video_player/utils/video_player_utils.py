@@ -1,9 +1,9 @@
-import dataclasses
 import ctypes
+import dataclasses
 import platform
 import subprocess
-from typing import Callable
 from ctypes import wintypes
+from typing import Callable
 
 import cv2
 import numpy as np
