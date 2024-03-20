@@ -2,8 +2,8 @@ from typing import Tuple
 
 import numpy as np
 
-from .base_frame_editor import BaseFrameEditor
-from ..utils.video_player_utils import write_text_on_img
+from ..base_frame_editor import BaseFrameEditor
+from ...utils.video_player_utils import write_text_on_img
 
 
 class FrameNumPrinter(BaseFrameEditor):
@@ -30,5 +30,6 @@ class FrameNumPrinter(BaseFrameEditor):
         )
         return frame
 
+    @property
     def edit_after_resize(self) -> bool:
         return True

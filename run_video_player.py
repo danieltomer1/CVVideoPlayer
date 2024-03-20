@@ -3,22 +3,16 @@ from py_video_player import LocalFrameReader, Recorder, VideoPlayer
 
 CONFIG = {
     "source_path": "sample_videos/sample_video.mp4",
-    "recorder": {
-        "enable": True,
-    },
+    "recorder": {"enable": True},
 }
 
 
 def run_player():
-    frame_reader = LocalFrameReader(source_path=CONFIG["source_path"])
-    video_name = Path(CONFIG["source_path"]).stem
-
-    recorder = Recorder() if CONFIG["recorder"]["enable"] else None
-
     video_player = VideoPlayer(
-        video_name=video_name,
-        frame_reader=frame_reader,
-        recorder=recorder,
+        video_name=Path(CONFIG["source_path"]).stem,
+        frame_reader=LocalFrameReader(source_path=CONFIG["source_path"]),
+        recorder=Recorder() if CONFIG["recorder"]["enable"] else None,
+        add_basic_frame_editors=True,
     )
 
     with video_player:

@@ -6,8 +6,7 @@ import Xlib.display
 import cv2
 from pynput import keyboard, mouse
 
-from . import FrameNumPrinter, FrameNormalizer, HistogramEqualizer
-from .frame_editors.abstract_frame_editor import AbstractFrameEditor
+from .frame_editors import AbstractFrameEditor, FrameNumPrinter, FrameNormalizer, HistogramEqualizer
 from .frame_reader import AbstractFrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (

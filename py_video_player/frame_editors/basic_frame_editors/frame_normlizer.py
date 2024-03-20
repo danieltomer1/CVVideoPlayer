@@ -3,7 +3,7 @@ from typing import Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .base_frame_editor import BaseFrameEditor
+from ..base_frame_editor import BaseFrameEditor
 
 
 class FrameNormalizer(BaseFrameEditor):
@@ -54,5 +54,6 @@ class FrameNormalizer(BaseFrameEditor):
         plt.hist(self._last_frame.ravel(), 256, (0, 256))
         plt.show()
 
+    @property
     def edit_after_resize(self) -> bool:
         return False

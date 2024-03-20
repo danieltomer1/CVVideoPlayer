@@ -1,7 +1,7 @@
 import numpy as np
 
-from .base_frame_editor import BaseFrameEditor
-from ..utils.video_player_utils import hist_eq_uint16
+from ..base_frame_editor import BaseFrameEditor
+from ...utils.video_player_utils import hist_eq_uint16
 
 
 class HistogramEqualizer(BaseFrameEditor):
@@ -20,8 +20,9 @@ class HistogramEqualizer(BaseFrameEditor):
         frame /= norm_factor
 
         frame = (frame * (2**16 - 1)).astype("uint16")
-        frame = hist_eq_uint16(frame) / (2**16 - 1)
+        frame = (hist_eq_uint16(frame) / 255).astype("uint8")
         return frame
 
+    @property
     def edit_after_resize(self) -> bool:
         return False
