@@ -1,5 +1,8 @@
+import ctypes
 import dataclasses
+import platform
 import subprocess
+from ctypes import wintypes
 from typing import Callable
 
 import cv2
@@ -18,6 +21,13 @@ def write_text_on_img(img, text, col=10, row=10, font_scale=1.5, color=(255, 255
     """
     cv2.putText(img, text, (col, row), cv2.FONT_HERSHEY_PLAIN, font_scale, color, thickness)
     return row + spacing
+
+
+def get_forground_window_pid():
+    h_wnd = ctypes.windll.user32.GetForegroundWindow()
+    pid = ctypes.wintypes.DWORD()
+    ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+    return pid.value
 
 
 def get_keyboard_layout():
@@ -74,6 +84,13 @@ def normalize_image(image, equalize_hist: bool, norm_max=None, norm_min=None):
 
 
 def get_screen_size():
+    if platform.system() == "Linux":
+        return get_screen_size_linux()
+    elif platform.system() == "Windows":
+        return get_screen_size_windows()
+
+
+def get_screen_size_linux():
     try:
         screen_size_str = (
             subprocess.check_output('xrandr | grep "\*" | cut -d" " -f4', shell=True).decode().strip().split("\n")[0]
@@ -84,6 +101,12 @@ def get_screen_size():
         return screen_w, screen_h
     except (ValueError, TypeError, subprocess.CalledProcessError, IndexError):
         return None, None
+
+
+def get_screen_size_windows():
+    user32 = ctypes.windll.user32
+    screensize = 0.9 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
+    return screensize
 
 
 def get_screen_adjusted_frame_size(screen_size, frame_width, frame_height):

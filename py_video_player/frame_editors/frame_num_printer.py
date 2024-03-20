@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 
 from .base_frame_editor import BaseFrameEditor
@@ -5,7 +7,13 @@ from ..utils.video_player_utils import write_text_on_img
 
 
 class FrameNumPrinter(BaseFrameEditor):
-    def __init__(self, enable_by_default=True, font_scale=2, font_thickness=2, tl_coordinate=(25, 10)):
+    def __init__(
+        self,
+        enable_by_default: bool = True,
+        font_scale: float = 2,
+        font_thickness: int = 2,
+        tl_coordinate: Tuple[int, int] = (25, 10),
+    ):
         super().__init__(enable_by_default)
         self._font_scale = font_scale
         self._font_thickness = font_thickness

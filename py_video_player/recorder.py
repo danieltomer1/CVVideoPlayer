@@ -7,9 +7,9 @@ import cv2
 class Recorder:
     def __init__(
         self,
-        output_video_path: Path,
-        recorded_video_fps: int,
-        output_video_shape: Tuple[int, int],
+        output_video_path: Path = Path("./outputs/recorded_video.mp4"),
+        recorded_video_fps: int = 30,
+        output_video_shape: Tuple[int, int] = (640, 512),
     ):
 
         self._output_video_path = output_video_path
