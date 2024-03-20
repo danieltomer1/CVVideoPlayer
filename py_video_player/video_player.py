@@ -8,7 +8,7 @@ from pynput import keyboard, mouse
 
 from . import FrameNumPrinter, FrameNormalizer, HistogramEqualizer
 from .frame_editors.abstract_frame_editor import AbstractFrameEditor
-from .image_reader import AbstractImageReader
+from .frame_reader import AbstractFrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
     get_keyboard_layout,
@@ -23,19 +23,19 @@ class VideoPlayer:
     def __init__(
         self,
         video_name: str,
-        image_reader: AbstractImageReader,
+        frame_reader: AbstractFrameReader,
         start_from_frame: int = 0,
         recorder: Optional[Recorder] = None,
         add_basic_frame_editors: bool = True,
     ):
 
         self._video_name = video_name
-        self._image_reader = image_reader
+        self._frame_reader = frame_reader
         self._recorder = recorder
 
         self._show_sidebar = False
         self._start_from_frame = start_from_frame
-        self._last_frame = len(image_reader) - 1
+        self._last_frame = len(frame_reader) - 1
         self._frame_num = start_from_frame - 1
         self._modifiers = set()
         self._current_frame = None
@@ -273,22 +273,22 @@ class VideoPlayer:
             self._recorder.write_frame_to_video(frame)
 
         cv2.imshow(winname=self._video_name, mat=frame)
-        cv2.waitKey(1)
+        cv2.waitKey(5)
         cv2.waitKey(1)
 
     def _next_frame(self, num_frames_to_skip=1):
         if self._frame_num == self._last_frame:
             return
 
-        self._frame_num = min(self._frame_num + num_frames_to_skip, len(self._image_reader) - 1)
-        self._current_frame = self._image_reader.get_frame(self._frame_num)
+        self._frame_num = min(self._frame_num + num_frames_to_skip, len(self._frame_reader) - 1)
+        self._current_frame = self._frame_reader.get_frame(self._frame_num)
 
     def _prev_frame(self, num_frames_to_skip=1):
         if self._frame_num == 0:
             return
 
         self._frame_num = max(self._frame_num - num_frames_to_skip, 0)
-        self._current_frame = self._image_reader.get_frame(self._frame_num)
+        self._current_frame = self._frame_reader.get_frame(self._frame_num)
 
     def _create_basic_keymap(self) -> Dict[str, KeymapAction]:
         keymap = {

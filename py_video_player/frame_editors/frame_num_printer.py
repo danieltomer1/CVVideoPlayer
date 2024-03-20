@@ -12,7 +12,7 @@ class FrameNumPrinter(BaseFrameEditor):
         enable_by_default: bool = True,
         font_scale: float = 2,
         font_thickness: int = 2,
-        tl_coordinate: Tuple[int, int] = (25, 10)
+        tl_coordinate: Tuple[int, int] = (25, 10),
     ):
         super().__init__(enable_by_default)
         self._font_scale = font_scale

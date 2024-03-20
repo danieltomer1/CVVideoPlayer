@@ -1,6 +1,7 @@
 import abc
 import random
 from pathlib import Path
+import mimetypes
 from typing import Optional
 
 import cv2
@@ -10,7 +11,7 @@ from decord import VideoReader, cpu
 RANDOM_STATE = random.Random(42)
 
 
-class AbstractImageReader(abc.ABC):
+class AbstractFrameReader(abc.ABC):
     @abc.abstractmethod
     def get_frame(self, frame_num: int) -> Optional[np.ndarray]:
         pass
@@ -20,14 +21,19 @@ class AbstractImageReader(abc.ABC):
         pass
 
 
-class ImageReader(AbstractImageReader):
-    def __init__(self, data_source_name, data_source_path):
-        if data_source_name == "local_video_path":
-            self._reader = VideoFileReader(data_source_path)
-        elif data_source_name == "local_frame_dir":
-            self._reader = LocalDirImageReader(data_source_path)
+class LocalFrameReader(AbstractFrameReader):
+    def __init__(self, source_path):
+        """
+        Args:
+            source_path: can be either a local video file path or a path to a directory containing frames as single
+            images. the images need to contain a integer in their name specifying the frame order.
+        """
+        if Path(source_path).is_dir():
+            self._reader = LocalDirReader(source_path)
+        elif mimetypes.guess_type(source_path)[0].startswith("video"):
+            self._reader = LocalVideoFileReader(source_path)
         else:
-            raise NotImplementedError(f"{data_source_name=} is not one of the supported data sources")
+            raise NotImplementedError(f"{source_path=} is not a video file or directory")
 
     def get_frame(self, frame_num: int):
         return self._reader.get_frame(frame_num)
@@ -36,7 +42,7 @@ class ImageReader(AbstractImageReader):
         return len(self._reader)
 
 
-class VideoFileReader(AbstractImageReader):
+class LocalVideoFileReader(AbstractFrameReader):
     def __init__(self, local_video_path: str):
         self._video_path = Path(local_video_path)
         assert self._video_path.is_file()
@@ -55,18 +61,17 @@ class VideoFileReader(AbstractImageReader):
         return len(self._video_reader)
 
 
-class LocalDirImageReader(AbstractImageReader):
+class LocalDirReader(AbstractFrameReader):
     def __init__(self, local_frame_dir):
         self.local_frame_dir = local_frame_dir
-        self._extensions = [".tif", ".png", ".tiff", ".JPEG", ".jpg"]
         self._frame_paths = self._create_frame_list()
 
     def _create_frame_list(self):
         self._frame_paths = list(Path(self.local_frame_dir).glob("*"))
-        self._frame_paths = [path for path in self._frame_paths if path.suffix in self._extensions]
+        self._frame_paths = [path for path in self._frame_paths if mimetypes.guess_type(path)[0].startswith("image")]
 
         if len(self._frame_paths) == 0:
-            raise (Exception(f"No files found in dir {self.local_frame_dir}"))
+            raise (Exception(f"No image files found in dir {self.local_frame_dir}"))
 
         self._frame_paths = sorted(self._frame_paths, key=lambda x: int(extract_digits_from_str(x.stem)))
         return self._frame_paths
