@@ -1,12 +1,18 @@
 import numpy as np
 
 from ..base_frame_editor import BaseFrameEditor
-from ...utils.video_player_utils import hist_eq_uint16
+from ...utils.video_player_utils import hist_eq_uint16, KeymapAction
 
 
 class HistogramEqualizer(BaseFrameEditor):
     def __init__(self, enable_by_default: bool = False):
         super().__init__(enable_by_default)
+
+    @property
+    def keymap_actions_to_register(self):
+        return {
+            "ctrl+h": KeymapAction(func=self.enable_disable, description="Enable/Disable frame number"),
+        }
 
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":

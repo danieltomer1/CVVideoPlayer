@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Optional
 
 import numpy as np
 
 from py_video_player.frame_editors.abstract_frame_editor import AbstractFrameEditor
+from py_video_player.utils.video_player_utils import KeymapAction
 
 
 class BaseFrameEditor(AbstractFrameEditor, ABC):
@@ -17,6 +19,10 @@ class BaseFrameEditor(AbstractFrameEditor, ABC):
     @abstractmethod
     def edit_after_resize(self) -> bool:
         pass
+
+    @property
+    def keymap_actions_to_register(self) -> Optional[Dict[str, KeymapAction]]:
+        return None
 
     @abstractmethod
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:

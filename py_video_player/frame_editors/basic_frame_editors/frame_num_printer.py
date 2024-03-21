@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 
 from ..base_frame_editor import BaseFrameEditor
-from ...utils.video_player_utils import write_text_on_img
+from ...utils.video_player_utils import write_text_on_img, KeymapAction
 
 
 class FrameNumPrinter(BaseFrameEditor):
@@ -18,6 +18,12 @@ class FrameNumPrinter(BaseFrameEditor):
         self._font_scale = font_scale
         self._font_thickness = font_thickness
         self._tl_coordinate = tl_coordinate
+
+    @property
+    def keymap_actions_to_register(self):
+        return {
+            "ctrl+f": KeymapAction(func=self.enable_disable, description="Enable/Disable frame number"),
+        }
 
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         write_text_on_img(

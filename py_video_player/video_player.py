@@ -65,40 +65,22 @@ class VideoPlayer:
     def add_frame_editor(self, frame_editor: AbstractFrameEditor):
         frame_editor.setup(self._current_frame)
         self._frame_editors.append(frame_editor)
+        if frame_editor.keymap_actions_to_register is not None:
+            for key, action in frame_editor.keymap_actions_to_register.items():
+                self.register_keymap_action(key, action.func, action.description)
         self._show_current_frame()
 
-    def add_frame_num_printer(self, key="ctrl+f"):
+    def add_frame_num_printer(self):
         frame_num_printer = FrameNumPrinter()
         self.add_frame_editor(frame_num_printer)
-        self.register_keymap_action(
-            key=key,
-            func=frame_num_printer.enable_disable,
-            desc="enable/disable frame number print",
-        )
 
-    def add_frame_normalizer(self, set_range_key="ctrl+r", show_histogram_key="ctrl+alt+r"):
+    def add_frame_normalizer(self):
         frame_normalizer = FrameNormalizer()
         self.add_frame_editor(frame_normalizer)
-        self.register_keymap_action(
-            key=set_range_key,
-            func=frame_normalizer.set_dynamic_range,
-            desc="set dynamic range",
-        )
 
-        self.register_keymap_action(
-            key=show_histogram_key,
-            func=frame_normalizer.show_frame_histogram,
-            desc="show frame histogram",
-        )
-
-    def add_histogram_equalizer(self, key="ctrl+h"):
+    def add_histogram_equalizer(self):
         histogram_equalizer = HistogramEqualizer()
         self.add_frame_editor(histogram_equalizer)
-        self.register_keymap_action(
-            key=key,
-            func=histogram_equalizer.enable_disable,
-            desc="enable/disable histogram equalization",
-        )
 
     def register_keymap_action(self, key: str, func: Callable, desc: str):
         assert (

@@ -1,9 +1,10 @@
-from typing import Union
+from typing import Union, Optional, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from ..base_frame_editor import BaseFrameEditor
+from ...utils.video_player_utils import KeymapAction
 
 
 class FrameNormalizer(BaseFrameEditor):
@@ -24,6 +25,13 @@ class FrameNormalizer(BaseFrameEditor):
     def set_dynamic_range(self):
         self._range_min = input("Set new image min: ")
         self._range_max = input("Set new image max: ")
+
+    @property
+    def keymap_actions_to_register(self) -> Optional[Dict[str, KeymapAction]]:
+        return {
+            "ctrl+r": KeymapAction(func=self.set_dynamic_range, description="Set dynamic range"),
+            "ctrl+alt+r": KeymapAction(func=self.show_frame_histogram, description="Show frame histogram"),
+        }
 
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":
