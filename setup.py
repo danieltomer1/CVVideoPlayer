@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="py_video_player",
+    name="cvvideoplayer",
     version="0.1.0",
     author="Daniel Tomer",
     author_email="danieltomer1@gmail.com",

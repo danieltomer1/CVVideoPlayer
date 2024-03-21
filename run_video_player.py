@@ -1,5 +1,5 @@
 from pathlib import Path
-from py_video_player import LocalFrameReader, Recorder, VideoPlayer
+from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 
 CONFIG = {
     "source_path": "sample_videos/sample_video.mp4",

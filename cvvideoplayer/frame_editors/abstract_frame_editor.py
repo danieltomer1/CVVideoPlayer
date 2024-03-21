@@ -3,7 +3,7 @@ from typing import Dict
 
 import numpy as np
 
-from py_video_player.utils.video_player_utils import KeymapAction
+from ..utils.video_player_utils import KeymapAction
 
 
 class AbstractFrameEditor(ABC):

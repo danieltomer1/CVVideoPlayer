@@ -3,8 +3,8 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from py_video_player.frame_editors.abstract_frame_editor import AbstractFrameEditor
-from py_video_player.utils.video_player_utils import KeymapAction
+from ..frame_editors.abstract_frame_editor import AbstractFrameEditor
+from ..utils.video_player_utils import KeymapAction
 
 
 class BaseFrameEditor(AbstractFrameEditor, ABC):
