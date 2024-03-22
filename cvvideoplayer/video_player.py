@@ -16,6 +16,7 @@ from .utils.video_player_utils import (
     get_forground_window_pid,
     KeymapAction,
 )
+from .utils.windows_vk_dict import VK_CODE_MAP
 
 
 class VideoPlayer:
@@ -40,18 +41,23 @@ class VideoPlayer:
         self._current_frame = None
         self._frame_editors: list[AbstractFrameEditor] = []
 
+        self._ui_queue = Queue()
         self._keyboard_layout = get_keyboard_layout()
         self._number_action_registered = False
         self._play = False
-        self._display = Xlib.display.Display() if platform.system() == "Linux" else None
 
         self._screen_size = get_screen_size()
+        self._resize_factor = 1.0
+
         self._keymap = self._create_basic_keymap()
         self._next_frame(1)
         if add_basic_frame_editors:
             self._add_basic_frame_editors()
-        self._show_current_frame()
+
+        self._display = Xlib.display.Display() if platform.system() == "Linux" else None
         self._window_pid = get_forground_window_pid() if platform.system() == "Windows" else self._video_name
+
+        self._show_current_frame()
 
     def __enter__(self):
         return self
@@ -130,71 +136,16 @@ class VideoPlayer:
 
     def run(self):
         self._print_keymap()
-        queue = Queue()
 
-        def on_press(key):
+        keyboard.Listener(
+            on_press=self._add_key_press_to_queue,
+            on_release=self._add_key_release_to_queue,
+        ).start()
 
-            if self._get_in_focus_window_name() != self._window_pid:
-                return
-
-            if self._keyboard_layout == "Hebrew":
-                self._keyboard_layout = get_keyboard_layout()
-                print("Studio Does not work with Hebrew keyboard layout, switch to English to continue")
-                return
-
-            if key in {
-                keyboard.Key.ctrl,
-                keyboard.Key.ctrl_r,
-                keyboard.Key.ctrl_l,
-                keyboard.Key.alt,
-                keyboard.Key.alt_r,
-                keyboard.Key.alt_l,
-                keyboard.Key.shift,
-                keyboard.Key.shift_r,
-                keyboard.Key.shift_l,
-            }:
-                key = str(key).replace("Key.", "").split("_")[0]
-                if key not in self._modifiers:
-                    self._modifiers.add(key)
-
-            elif queue.empty():  # To avoid a situation of execution build up due to slow execution time
-                queue.put(("press", key))
-
-        def on_release(key):
-            if key in {
-                keyboard.Key.ctrl,
-                keyboard.Key.ctrl_r,
-                keyboard.Key.ctrl_l,
-                keyboard.Key.alt,
-                keyboard.Key.alt_r,
-                keyboard.Key.alt_l,
-                keyboard.Key.shift,
-                keyboard.Key.shift_r,
-                keyboard.Key.shift_l,
-            }:
-                key = str(key).replace("Key.", "").split("_")[0]
-                if str(key) in self._modifiers:
-                    self._modifiers.remove(key)
-                return
-
-            if not self._get_in_focus_window_name() == self._video_name:
-                return
-
-            if key == keyboard.Key.space:
-                return
-            queue.put(("release", key))
-
-        def on_mouse_click(x, y, button, pressed):
-            if queue.empty():  # To avoid a situation of execution build up due to slow execution time
-                queue.put(("mouse_click", (x, y, button, pressed)))
-
-        listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-        listener_mouse = mouse.Listener(on_click=on_mouse_click)
-        listener.start()
-        listener_mouse.start()
+        mouse.Listener(on_click=self._add_mouse_click_to_queue).start()
 
         while True:
-            action, cur_key = queue.get()
+            action, cur_key = self._ui_queue.get()
             if action == "mouse_click":
                 cv2.waitKey(30)
             if cv2.getWindowProperty(self._video_name, cv2.WND_PROP_VISIBLE) < 1:
@@ -205,11 +156,67 @@ class VideoPlayer:
             if action == "press":
                 if cur_key == keyboard.Key.space:
                     self._play = bool(1 - self._play)
-                    self._play_continuously(queue)
+                    self._play_continuously()
                 else:
                     self._handle_keyboard_press(cur_key)
             if action == "release":
                 self._handle_keyboard_release(cur_key)
+
+    def _add_key_press_to_queue(self, key):
+
+        if self._get_in_focus_window_name() != self._window_pid:
+            return
+
+        if self._keyboard_layout == "Hebrew":
+            self._keyboard_layout = get_keyboard_layout()
+            print("Studio Does not work with Hebrew keyboard layout, switch to English to continue")
+            return
+
+        if key in {
+            keyboard.Key.ctrl,
+            keyboard.Key.ctrl_r,
+            keyboard.Key.ctrl_l,
+            keyboard.Key.alt,
+            keyboard.Key.alt_r,
+            keyboard.Key.alt_l,
+            keyboard.Key.shift,
+            keyboard.Key.shift_r,
+            keyboard.Key.shift_l,
+        }:
+            key = str(key).replace("Key.", "").split("_")[0]
+            if key not in self._modifiers:
+                self._modifiers.add(key)
+
+        elif self._ui_queue.empty():  # To avoid a situation of execution build up due to slow execution time
+            self._ui_queue.put(("press", key))
+
+    def _add_key_release_to_queue(self, key):
+        if key in {
+            keyboard.Key.ctrl,
+            keyboard.Key.ctrl_r,
+            keyboard.Key.ctrl_l,
+            keyboard.Key.alt,
+            keyboard.Key.alt_r,
+            keyboard.Key.alt_l,
+            keyboard.Key.shift,
+            keyboard.Key.shift_r,
+            keyboard.Key.shift_l,
+        }:
+            key = str(key).replace("Key.", "").split("_")[0]
+            if str(key) in self._modifiers:
+                self._modifiers.remove(key)
+            return
+
+        if not self._get_in_focus_window_name() == self._video_name:
+            return
+
+        if key == keyboard.Key.space:
+            return
+        self._ui_queue.put(("release", key))
+
+    def _add_mouse_click_to_queue(self, x, y, button, pressed):
+        if self._ui_queue.empty():
+            self._ui_queue.put(("mouse_click", (x, y, button, pressed)))
 
     def _add_basic_frame_editors(self):
         self.add_frame_num_printer()
@@ -222,18 +229,19 @@ class VideoPlayer:
             print(f"{key}: {action.description}")
         print("***********************************")
 
-    def _play_continuously(self, queue):
-        while queue.empty() and self._play:
+    def _play_continuously(self):
+        while self._ui_queue.empty() and self._play:
             self._next_frame(1)
+            self._show_current_frame()
 
-    def _resize_frame_to_fit_screen(self, frame):
-        adjusted_size = get_screen_adjusted_frame_size(
+    def _resize_frame(self, frame):
+        width, height = get_screen_adjusted_frame_size(
             screen_size=self._screen_size,
             frame_width=frame.shape[1],
             frame_height=frame.shape[0],
         )
-
-        return cv2.resize(frame, adjusted_size)
+        frame_size = int(self._resize_factor * width), int(self._resize_factor * height)
+        return cv2.resize(frame, frame_size)
 
     def _show_current_frame(self):
         frame = self._current_frame.copy()
@@ -242,13 +250,13 @@ class VideoPlayer:
             if not frame_editor.edit_after_resize:
                 frame = frame_editor.edit_frame(frame, self._frame_num)
 
-        frame = self._resize_frame_to_fit_screen(frame)
+        frame = self._resize_frame(frame)
 
         for frame_editor in self._frame_editors:
             if frame_editor.edit_after_resize:
                 frame = frame_editor.edit_frame(frame, self._frame_num)
 
-        frame = self._resize_frame_to_fit_screen(frame)
+        frame = self._resize_frame(frame)
 
         if self._recorder is not None:
             self._recorder.write_frame_to_video(frame)
@@ -271,6 +279,9 @@ class VideoPlayer:
         self._frame_num = max(self._frame_num - num_frames_to_skip, 0)
         self._current_frame = self._frame_reader.get_frame(self._frame_num)
 
+    def _change_frame_resize_factor(self, change_by: float):
+        self._resize_factor = max(0.1, min(1.0, self._resize_factor + change_by))
+
     def _create_basic_keymap(self) -> Dict[str, KeymapAction]:
         keymap = {
             "right": KeymapAction(func=lambda: self._next_frame(1), description="Go to next frame"),
@@ -279,6 +290,8 @@ class VideoPlayer:
             "ctrl+left": KeymapAction(func=lambda: self._prev_frame(10), description="Go 10 frames back"),
             "ctrl+shift+right": KeymapAction(func=lambda: self._next_frame(50), description="Go 50 frames forward"),
             "ctrl+shift+left": KeymapAction(func=lambda: self._prev_frame(50), description="Go 50 frames back"),
+            "+": KeymapAction(func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            "-": KeymapAction(func=lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
         }
         return keymap
 
@@ -289,23 +302,23 @@ class VideoPlayer:
             key_without_modifiers = "5"
 
         if hasattr(key_without_modifiers, "vk"):
-            key_without_modifiers = chr(key_without_modifiers.vk).lower()
-
-        key_without_modifiers = str(key_without_modifiers).replace("'", "").replace("Key.", "")
+            key_without_modifiers = VK_CODE_MAP[key_without_modifiers.vk].lower()
+            key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
+        else:
+            key_without_modifiers = str(key_without_modifiers).replace("'", "").replace("Key.", "")
+            key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
 
         if str(key_without_modifiers).isnumeric():
             general_num_key = "+".join(sorted(self._modifiers) + ["num"])
         else:
             general_num_key = None
 
-        key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
-
         if general_num_key in self._keymap:
-            action = self._keymap[general_num_key]
-            action.func(key_without_modifiers)
+            self._keymap[general_num_key].func(key_without_modifiers)
+        elif key in self._keymap:
+            self._keymap[key].func()
         else:
-            action = self._keymap.get(key, KeymapAction(func=lambda: print(f"{key} deos nothing"), description=""))
-            action.func()
+            print(f"{key} deos nothing")
 
         self._show_current_frame()
 
