@@ -85,4 +85,3 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
 
     def toggle_show_below_bbox_label(self):
         self._show_below_bbox_label = not self._show_below_bbox_label
-
