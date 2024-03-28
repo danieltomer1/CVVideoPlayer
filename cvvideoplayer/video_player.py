@@ -61,8 +61,6 @@ class VideoPlayer:
         else:
             raise NotImplementedError(f"{platform.system()=} not supported")
 
-        self._show_current_frame()
-
     def __enter__(self):
         return self
 
@@ -77,8 +75,10 @@ class VideoPlayer:
         self._frame_editors.append(frame_editor)
         if frame_editor.keymap_actions_to_register is not None:
             for key, action in frame_editor.keymap_actions_to_register.items():
+                assert isinstance(
+                    action, KeymapAction
+                ), f"{frame_editor.__class__.__name__} is trying to register a keymap action (key = {key}) which is not an instance of KeymapAction"
                 self.register_keymap_action(key, action.func, action.description)
-        self._show_current_frame()
 
     def add_frame_num_printer(self):
         frame_num_printer = FrameNumPrinter(video_total_frame_num=len(self._frame_reader))
@@ -129,6 +129,8 @@ class VideoPlayer:
         self._keymap[key] = KeymapAction(func, desc)
 
     def run(self):
+        self._show_current_frame()
+        cv2.waitKey(30)
         self._print_keymap()
 
         keyboard.Listener(
@@ -274,7 +276,6 @@ class VideoPlayer:
 
         cv2.imshow(winname=self._video_name, mat=frame)
         cv2.waitKey(5)
-        cv2.waitKey(1)
 
     def _next_frame(self, num_frames_to_skip=1):
         if self._frame_num == self._last_frame:
@@ -302,7 +303,9 @@ class VideoPlayer:
             "ctrl+shift+right": KeymapAction(func=lambda: self._next_frame(50), description="Go 50 frames forward"),
             "ctrl+shift+left": KeymapAction(func=lambda: self._prev_frame(50), description="Go 50 frames back"),
             "+": KeymapAction(func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
-            "shift++": KeymapAction(func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            "shift++": KeymapAction(
+                func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"
+            ),
             "-": KeymapAction(func=lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
         }
         return keymap
