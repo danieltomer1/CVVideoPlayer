@@ -54,8 +54,12 @@ class VideoPlayer:
         if add_basic_frame_editors:
             self._add_basic_frame_editors()
 
-        self._display = Xlib.display.Display() if platform.system() == "Linux" else None
-        self._window_pid = get_forground_window_pid() if platform.system() == "Windows" else self._video_name
+        if platform.system() == "Linux":
+            self._linux_setup()
+        elif platform.system() == "Windows":
+            self._windows_setup()
+        else:
+            raise NotImplementedError(f"{platform.system()=} not supported")
 
         self._show_current_frame()
 
@@ -77,7 +81,7 @@ class VideoPlayer:
         self._show_current_frame()
 
     def add_frame_num_printer(self):
-        frame_num_printer = FrameNumPrinter()
+        frame_num_printer = FrameNumPrinter(video_total_frame_num=len(self._frame_reader))
         self.add_frame_editor(frame_num_printer)
 
     def add_frame_normalizer(self):
@@ -124,16 +128,6 @@ class VideoPlayer:
             )
         self._keymap[key] = KeymapAction(func, desc)
 
-    def _get_in_focus_window_name(self):
-        if platform.system() == "Linux":
-            window = self._display.get_input_focus().focus
-            if isinstance(window, int):
-                return ""
-            return window.get_wm_name()
-
-        elif platform.system() == "Windows":
-            return get_forground_window_pid()
-
     def run(self):
         self._print_keymap()
 
@@ -161,6 +155,23 @@ class VideoPlayer:
                     self._handle_keyboard_press(cur_key)
             if action == "release":
                 self._handle_keyboard_release(cur_key)
+
+    def _windows_setup(self):
+        self._window_pid = get_forground_window_pid()
+        self._get_in_focus_window_name = get_forground_window_pid
+        self._map_vk_code = lambda x: VK_CODE_MAP[x]
+
+    def _linux_setup(self):
+        self._window_pid = self._video_name
+        self._map_vk_code = lambda x: chr(x)
+
+        def _get_in_focus_window_name():
+            window = Xlib.display.Display().get_input_focus().focus
+            if isinstance(window, int):
+                return ""
+            return window.get_wm_name()
+
+        self._get_in_focus_window_name = _get_in_focus_window_name
 
     def _add_key_press_to_queue(self, key):
 
@@ -291,6 +302,7 @@ class VideoPlayer:
             "ctrl+shift+right": KeymapAction(func=lambda: self._next_frame(50), description="Go 50 frames forward"),
             "ctrl+shift+left": KeymapAction(func=lambda: self._prev_frame(50), description="Go 50 frames back"),
             "+": KeymapAction(func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            "shift++": KeymapAction(func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
             "-": KeymapAction(func=lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
         }
         return keymap
@@ -301,8 +313,8 @@ class VideoPlayer:
         ):  # work around for a bug in pynput model that does not convert 5 for some reason
             key_without_modifiers = "5"
 
-        if hasattr(key_without_modifiers, "vk"):
-            key_without_modifiers = VK_CODE_MAP[key_without_modifiers.vk].lower()
+        if hasattr(key_without_modifiers, "vk") and key_without_modifiers.vk is not None:
+            key_without_modifiers = self._map_vk_code(key_without_modifiers.vk).lower()
             key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
         else:
             key_without_modifiers = str(key_without_modifiers).replace("'", "").replace("Key.", "")
