@@ -35,14 +35,13 @@ def draw_polygon(
 def draw_label(
     x,
     y,
-    w,
     h,
     below_or_above,
     image,
     text,
     font_scale,
     thickness,
-    bg_color,
+    label_line_color,
     text_color,
     filling_color=(0, 0, 0),
 ):
@@ -58,7 +57,7 @@ def draw_label(
 
     if below_or_above == "above":
         cv2.rectangle(image, label_pt1, label_pt2, color=filling_color, thickness=-1, lineType=cv2.LINE_AA)
-        cv2.rectangle(image, label_pt1, label_pt2, color=bg_color, thickness=thickness, lineType=cv2.LINE_AA)
+        cv2.rectangle(image, label_pt1, label_pt2, color=label_line_color, thickness=thickness, lineType=cv2.LINE_AA)
 
     cv2.putText(
         img=image,
