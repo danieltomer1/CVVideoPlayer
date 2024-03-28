@@ -1,8 +1,10 @@
 from pathlib import Path
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
+from cvvideoplayer.frame_editors.detections_csv_plotter import DetectionsCsvPlotter
 
 CONFIG = {
-    "source_path": "sample_videos/sample_video.mp4",
+    "source_path": "sample_videos/example_video.mp4",
+    "detection_csv_path": "sample_videos/example_video_detections.csv",
     "recorder": {"enable": True},
 }
 
@@ -15,6 +17,11 @@ def run_player():
         add_basic_frame_editors=True,
     )
 
+    video_player.add_frame_editor(
+        DetectionsCsvPlotter(
+            detections_csv_path=Path(CONFIG["detection_csv_path"]),
+        )
+    )
     with video_player:
         video_player.run()
 

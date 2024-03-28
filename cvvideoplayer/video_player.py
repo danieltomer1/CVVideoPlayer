@@ -6,7 +6,7 @@ import Xlib.display
 import cv2
 from pynput import keyboard, mouse
 
-from .frame_editors import AbstractFrameEditor, FrameNumPrinter, FrameNormalizer, HistogramEqualizer
+from .frame_editors import FrameNumPrinter, FrameNormalizer, HistogramEqualizer, BaseFrameEditor
 from .frame_reader import AbstractFrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
@@ -39,7 +39,7 @@ class VideoPlayer:
         self._frame_num = start_from_frame - 1
         self._modifiers = set()
         self._current_frame = None
-        self._frame_editors: list[AbstractFrameEditor] = []
+        self._frame_editors: list[BaseFrameEditor] = []
 
         self._ui_queue = Queue()
         self._keyboard_layout = get_keyboard_layout()
@@ -50,16 +50,8 @@ class VideoPlayer:
         self._resize_factor = 1.0
 
         self._keymap = self._create_basic_keymap()
-        self._next_frame(1)
         if add_basic_frame_editors:
             self._add_basic_frame_editors()
-
-        if platform.system() == "Linux":
-            self._linux_setup()
-        elif platform.system() == "Windows":
-            self._windows_setup()
-        else:
-            raise NotImplementedError(f"{platform.system()=} not supported")
 
     def __enter__(self):
         return self
@@ -70,8 +62,8 @@ class VideoPlayer:
         for frame_editor in self._frame_editors:
             frame_editor.teardown()
 
-    def add_frame_editor(self, frame_editor: AbstractFrameEditor):
-        frame_editor.setup(self._current_frame)
+    def add_frame_editor(self, frame_editor: BaseFrameEditor):
+        assert isinstance(frame_editor, BaseFrameEditor), "frame_editor must be a derived class of BaseFrameEditor"
         self._frame_editors.append(frame_editor)
         if frame_editor.keymap_actions_to_register is not None:
             for key, action in frame_editor.keymap_actions_to_register.items():
@@ -79,18 +71,6 @@ class VideoPlayer:
                     action, KeymapAction
                 ), f"{frame_editor.__class__.__name__} is trying to register a keymap action (key = {key}) which is not an instance of KeymapAction"
                 self.register_keymap_action(key, action.func, action.description)
-
-    def add_frame_num_printer(self):
-        frame_num_printer = FrameNumPrinter(video_total_frame_num=len(self._frame_reader))
-        self.add_frame_editor(frame_num_printer)
-
-    def add_frame_normalizer(self):
-        frame_normalizer = FrameNormalizer()
-        self.add_frame_editor(frame_normalizer)
-
-    def add_histogram_equalizer(self):
-        histogram_equalizer = HistogramEqualizer()
-        self.add_frame_editor(histogram_equalizer)
 
     def register_keymap_action(self, key: str, func: Callable, desc: str):
         assert (
@@ -115,24 +95,8 @@ class VideoPlayer:
 
         self._keymap[key] = KeymapAction(func, desc)
 
-    def register_keymap_general_number_action(
-        self,
-        func,
-        desc,
-        modifiers: Tuple = (),
-    ):
-        key = "+".join(modifiers + ("num",))
-        if key in self._keymap:
-            raise KeyError(
-                f"{key} is already registered (Registered action description: {self._keymap[key].description})"
-            )
-        self._keymap[key] = KeymapAction(func, desc)
-
     def run(self):
-        self._show_current_frame()
-        cv2.waitKey(30)
-        self._print_keymap()
-
+        self._setup()
         keyboard.Listener(
             on_press=self._add_key_press_to_queue,
             on_release=self._add_key_release_to_queue,
@@ -158,13 +122,28 @@ class VideoPlayer:
             if action == "release":
                 self._handle_keyboard_release(cur_key)
 
+    def _setup(self):
+        if platform.system() == "Linux":
+            self._linux_setup()
+        elif platform.system() == "Windows":
+            self._windows_setup()
+        else:
+            raise NotImplementedError(f"{platform.system()=} not supported")
+
+        self._next_frame(1)
+        for frame_editor in self._frame_editors:
+            frame_editor.setup(self._current_frame)
+
+        self._show_current_frame()
+        cv2.waitKey(30)
+        self._window_pid = self._get_in_focus_window_name()
+        self._print_keymap()
+
     def _windows_setup(self):
-        self._window_pid = get_forground_window_pid()
-        self._get_in_focus_window_name = get_forground_window_pid
         self._map_vk_code = lambda x: VK_CODE_MAP[x]
+        self._get_in_focus_window_name = get_forground_window_pid
 
     def _linux_setup(self):
-        self._window_pid = self._video_name
         self._map_vk_code = lambda x: chr(x)
 
         def _get_in_focus_window_name():
@@ -232,9 +211,9 @@ class VideoPlayer:
             self._ui_queue.put(("mouse_click", (x, y, button, pressed)))
 
     def _add_basic_frame_editors(self):
-        self.add_frame_num_printer()
-        self.add_frame_normalizer()
-        self.add_histogram_equalizer()
+        self.add_frame_editor(FrameNumPrinter(video_total_frame_num=len(self._frame_reader)))
+        self.add_frame_editor(FrameNormalizer())
+        self.add_frame_editor(HistogramEqualizer())
 
     def _print_keymap(self):
         print("space bar: Play/Pause video")
@@ -275,7 +254,8 @@ class VideoPlayer:
             self._recorder.write_frame_to_video(frame)
 
         cv2.imshow(winname=self._video_name, mat=frame)
-        cv2.waitKey(5)
+        cv2.waitKey(10)
+        cv2.waitKey(1)  # for some reason windows OS requires an additional waitKey to work properly
 
     def _next_frame(self, num_frames_to_skip=1):
         if self._frame_num == self._last_frame:
