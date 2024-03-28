@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import *
 
 
 @dataclass
@@ -8,6 +8,7 @@ class Bbox:
     y1: int
     width: int
     height: int
+    color: Optional[Tuple[int, int, int]] = None
     above_label: Optional[str] = None
     below_label: Optional[str] = None
 

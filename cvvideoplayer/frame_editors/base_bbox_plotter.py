@@ -12,7 +12,7 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
         enable_by_default: bool = False,
         show_above_bbox_label: bool = True,
         show_below_bbox_label: bool = True,
-        bbox_color: Tuple[int, int, int] = (255, 0, 0),
+        default_bbox_color: Tuple[int, int, int] = (255, 0, 0),
         text_color: Tuple[int, int, int] = (255, 255, 255),
         drawing_thickness: int = 1,
         font_scale: float = 0.5,
@@ -26,9 +26,9 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
         self._thickness = drawing_thickness
         self._show_above_bbox_label = show_above_bbox_label
         self._show_below_bbox_label = show_below_bbox_label
-        self._bbox_color = bbox_color
+        self._default_bbox_color = default_bbox_color
         self._label_text_color = label_text_color
-        self._label_line_color = label_line_color or bbox_color
+        self._label_line_color = label_line_color or default_bbox_color
         self._label_filling_color = label_filling_color
 
     @property
@@ -47,7 +47,7 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
                 y=bbox.y1,
                 w=bbox.width,
                 h=bbox.height,
-                color=self._bbox_color,
+                color=bbox.color or self._default_bbox_color,
                 thickness=self._thickness,
             )
             if self._show_above_bbox_label:
