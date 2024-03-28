@@ -13,8 +13,8 @@ class Bbox:
     below_label: Optional[str] = None
 
     @classmethod
-    def init_with_xyxy(cls, x1, y1, x2, y2, above_label=None, below_label=None):
-        return cls(x1, y1, x2 - x1, y2 - y1, above_label, below_label)
+    def init_with_xyxy(cls, x1, y1, x2, y2, color=None, above_label=None, below_label=None):
+        return cls(x1, y1, x2 - x1, y2 - y1, color, above_label, below_label)
 
     @property
     def x2(self):
