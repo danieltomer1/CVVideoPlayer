@@ -2,6 +2,8 @@
 This module contains an drawing routines based on OpenCV.
 """
 
+from typing import Tuple, Optional
+
 import cv2
 import numpy as np
 
@@ -33,36 +35,40 @@ def draw_polygon(
 
 
 def draw_label(
-    x,
-    y,
-    h,
-    below_or_above,
-    image,
-    text,
-    font_scale,
-    thickness,
-    label_line_color,
-    text_color,
-    filling_color=(0, 0, 0),
+    frame: np.ndarray,
+    bbox_x1: int,
+    bbox_y1: int,
+    bbox_h: int,
+    below_or_above: str,
+    text: str,
+    font_scale: float,
+    thickness: int,
+    text_color: Tuple[int, int, int],
+    label_line_color: Optional[Tuple[int, int, int]] = None,
+    filling_color: Optional[Tuple[int, int, int]] = None,
 ):
     assert below_or_above in {"below", "above"}
+
     text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_PLAIN, fontScale=font_scale, thickness=thickness)
 
-    label_pt1 = int(x), int(y - 10 - text_size[0][1])
-    label_pt2 = int(x + 10 + text_size[0][0]), int(y)
-    up_left = label_pt1[0] + 5, label_pt2[1] + 5 + h + text_size[0][1]
-    bottom_left = label_pt1[0] + 5, label_pt2[1] - 5
-
-    position = up_left if below_or_above == "below" else bottom_left
-
     if below_or_above == "above":
-        cv2.rectangle(image, label_pt1, label_pt2, color=filling_color, thickness=-1, lineType=cv2.LINE_AA)
-        cv2.rectangle(image, label_pt1, label_pt2, color=label_line_color, thickness=thickness, lineType=cv2.LINE_AA)
+        label_pt1 = int(bbox_x1), int(bbox_y1 - 10 - text_size[0][1])
+        label_pt2 = int(bbox_x1 + 10 + text_size[0][0]), int(bbox_y1)
+        text_position = label_pt1[0] + 5, label_pt2[1] - 5
+    else:
+        label_pt1 = int(bbox_x1), int(bbox_y1 + bbox_h)
+        label_pt2 = int(bbox_x1 + 10 + text_size[0][0]), int(bbox_y1 + bbox_h + 10 + text_size[0][1])
+        text_position = label_pt1[0] + 5, label_pt2[1] - 5
+
+    if filling_color is not None:
+        cv2.rectangle(frame, label_pt1, label_pt2, color=filling_color, thickness=-1, lineType=cv2.LINE_AA)
+    if label_line_color is not None:
+        cv2.rectangle(frame, label_pt1, label_pt2, color=label_line_color, thickness=thickness, lineType=cv2.LINE_AA)
 
     cv2.putText(
-        img=image,
+        img=frame,
         text=text,
-        org=position,
+        org=text_position,
         fontFace=cv2.FONT_HERSHEY_PLAIN,
         fontScale=font_scale,
         color=text_color,

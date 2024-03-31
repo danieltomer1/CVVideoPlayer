@@ -1,4 +1,3 @@
-from .abstract_frame_editor import AbstractFrameEditor
 from .base_frame_editor import BaseFrameEditor
 from .base_bbox_plotter import BaseBboxPlotter
 from .basic_frame_editors.frame_normlizer import FrameNormalizer
