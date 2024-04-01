@@ -3,8 +3,8 @@ from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 from cvvideoplayer.frame_editors.detections_csv_plotter import DetectionsCsvPlotter
 
 CONFIG = {
-    "source_path": "sample_videos/example_video.mp4",
-    "detection_csv_path": "sample_videos/example_video_detections.csv",
+    "source_path": "assets/example_video.mp4",
+    "detection_csv_path": "assets/example_video_detections.csv",
     "recorder": {"enable": True},
 }
 

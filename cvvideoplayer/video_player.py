@@ -1,4 +1,5 @@
 import platform
+import time
 from queue import Queue
 from typing import *
 
@@ -135,7 +136,8 @@ class VideoPlayer:
             frame_editor.setup(self._current_frame)
 
         self._show_current_frame()
-        cv2.waitKey(30)
+        cv2.waitKey(50)
+        time.sleep(0.5)
         self._window_pid = self._get_in_focus_window_name()
         self._print_keymap()
 
