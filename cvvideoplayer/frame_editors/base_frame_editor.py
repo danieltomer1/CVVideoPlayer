@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Optional, List
 
 import numpy as np
 
-from ..utils.video_player_utils import KeymapAction
+from ..utils.video_player_utils import KeyFunction
 
 
 class BaseFrameEditor(ABC):
@@ -35,10 +35,10 @@ class BaseFrameEditor(ABC):
         pass
 
     def enable_disable(self):
-        self._enabled = bool(1 - self._enabled)
+        self._enabled = not self._enabled
 
     @property
-    def keymap_actions_to_register(self) -> Optional[Dict[str, KeymapAction]]:
+    def key_function_to_register(self) -> Optional[List[KeyFunction]]:
         return None
 
     def edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:

@@ -7,10 +7,24 @@ from typing import Callable
 
 import cv2
 import numpy as np
+from pynput import keyboard
+
+MODIFIERS = {
+    keyboard.Key.ctrl,
+    keyboard.Key.ctrl_r,
+    keyboard.Key.ctrl_l,
+    keyboard.Key.alt,
+    keyboard.Key.alt_r,
+    keyboard.Key.alt_l,
+    keyboard.Key.shift,
+    keyboard.Key.shift_r,
+    keyboard.Key.shift_l,
+}
 
 
 @dataclasses.dataclass
-class KeymapAction:
+class KeyFunction:
+    key: str
     func: Callable
     description: str
 

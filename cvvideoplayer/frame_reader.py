@@ -11,7 +11,7 @@ from decord import VideoReader, cpu
 RANDOM_STATE = random.Random(42)
 
 
-class AbstractFrameReader(abc.ABC):
+class FrameReader(abc.ABC):
     @abc.abstractmethod
     def get_frame(self, frame_num: int) -> Optional[np.ndarray]:
         pass
@@ -21,7 +21,7 @@ class AbstractFrameReader(abc.ABC):
         pass
 
 
-class LocalFrameReader(AbstractFrameReader):
+class LocalFrameReader(FrameReader):
     def __init__(self, source_path):
         """
         Args:
@@ -42,7 +42,7 @@ class LocalFrameReader(AbstractFrameReader):
         return len(self._reader)
 
 
-class LocalVideoFileReader(AbstractFrameReader):
+class LocalVideoFileReader(FrameReader):
     def __init__(self, local_video_path: str):
         self._video_path = Path(local_video_path)
         assert self._video_path.is_file()
@@ -61,7 +61,7 @@ class LocalVideoFileReader(AbstractFrameReader):
         return len(self._video_reader)
 
 
-class LocalDirReader(AbstractFrameReader):
+class LocalDirReader(FrameReader):
     def __init__(self, local_frame_dir):
         self.local_frame_dir = local_frame_dir
         self._frame_paths = self._create_frame_list()
