@@ -12,15 +12,16 @@ to develop, analyze and debug their video related algorithms and model.
 The player is interactive and operates only with keyboard presses (no buttons). The user can register new 
 shortcuts using the VideoPlayer class's API.
 
-### Design overview
-
+**Design overview**
 <div align="center"><img src="assets/video_player_design_chart.png" width="500"></div>
 
 The player receives an image from the FrameReader, the frame is then passed to a list of frame editors
 which alter it in any way desirable and return the frame. The frame editors also specify whether 
 to preform the edit after the frame has been resized to fit the screen or before.
 
-### FrameReader class
+<details>
+<summary>FrameReader class</summary>
+
 Implements the following protocol:
 ```python
 class FrameReader(abc.ABC):
@@ -37,7 +38,11 @@ A ready to use LocalFrameReader is already implemented and can be used to read
 any local video file or folder containing the frames as images 
 (as long as there is a number in the name of the image files indicating their order).
 
-### FrameEditor class
+</details>
+
+
+<details>
+<summary>FrameEditor class</summary>
 
 You can add any number of FrameEditors for the player to apply using
 the VideoPlayer method "add_frame_editor". A FrameEditor is a class
@@ -69,7 +74,13 @@ class BaseFrameEditor(ABC):
         """
         pass
 ```
-### KeyFunction dataclass
+
+</details>
+
+
+<details>
+<summary>KeyFunction dataclass</summary>
+
 A KeyFunction defines a keypress:function mapping with an added description of the
 function's purpose. You can add a new KeyFunction in to ways:
 - Using the video player's method "register_key_function"
@@ -88,6 +99,27 @@ These are used by the player and cannot be overwritten:
 - "ctrl+shift+left": 50 frames back
 - "+": Increase frame size
 - "-": Decrease frame size
+
+</details>
+
+<details>
+<summary>Recorder class</summary>
+
+The recorder class is an object that can be used to record whatever is being
+played in the video player. By default, the video will be saved in "outputs" folder
+which will be created in the CWD.
+
+To use the recorder:
+```python
+from cvvideoplayer import VideoPlayer, Recorder
+video_player = VideoPlayer(
+    recorder=Recorder(),
+    **other_video_player_kwargs
+)
+```
+
+</details>
+
 ## Quick Start
 ```python
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
