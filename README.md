@@ -2,14 +2,14 @@
 
 ## Introduction
 CV video player is a Python-based customizable video player that helps computer vision practitioners
-to develop, analyze and debug their video related algorithms and model.
+to develop, analyze, and debug their video-related algorithms and models.
 
 
 ## Installation
 `pip install cvvideoplayer`
 
 ## Usage
-The player is interactive and operates only with keyboard presses (no buttons). The user can register new 
+The player is interactive and operates only with keyboard presses (no buttons). The user can register 
 shortcuts using the VideoPlayer class's API.
 
 **Design overview**
@@ -17,7 +17,7 @@ shortcuts using the VideoPlayer class's API.
 
 The player receives an image from the FrameReader, the frame is then passed to a list of frame editors
 which alter it in any way desirable and return the frame. The frame editors also specify whether 
-to preform the edit after the frame has been resized to fit the screen or before.
+to perform the edit after the frame has been resized to fit the screen or before.
 
 <details>
 <summary>FrameReader class</summary>
@@ -34,7 +34,7 @@ class FrameReader(abc.ABC):
         pass
 ```
 
-A ready to use LocalFrameReader is already implemented and can be used to read 
+A ready-to-use LocalFrameReader is already implemented and can be used to read 
 any local video file or folder containing the frames as images 
 (as long as there is a number in the name of the image files indicating their order).
 
@@ -46,7 +46,7 @@ any local video file or folder containing the frames as images
 
 You can add any number of FrameEditors for the player to apply using
 the VideoPlayer method "add_frame_editor". A FrameEditor is a class
-that needs to  inherit BaseFrameEditor and to implement 
+that needs to inherit BaseFrameEditor and implement 
 the following abstract methods:
 
 ```python
@@ -81,8 +81,8 @@ class BaseFrameEditor(ABC):
 <details>
 <summary>KeyFunction dataclass</summary>
 
-A KeyFunction defines a keypress:function mapping with an added description of the
-function's purpose. You can add a new KeyFunction in to ways:
+A KeyFunction defines a mapping between a key and a function with an added description of the
+function's purpose. You can add a new KeyFunction in two ways:
 - Using the video player's method "register_key_function"
 - Using a FrameEditors property "key_functions_to_register" which returns 
 a list of KeyFunctions that will be registered once the FrameEditor is added 
@@ -106,7 +106,7 @@ These are used by the player and cannot be overwritten:
 <summary>Recorder class</summary>
 
 The recorder class is an object that can be used to record whatever is being
-played in the video player. By default, the video will be saved in "outputs" folder
+played in the video player. By default, the video will be saved in an "outputs" folder
 which will be created in the CWD.
 
 To use the recorder:
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     run_player()
 ``` 
 
-In this example we initiate a very basic video player that will play "example_video.mp4" with added basic
+In this example, we initiate a very basic video player that will play "example_video.mp4" with added basic
 frame editors:
 - Frame number printer (disable/enable with **ctrl+f**): Prints the current frame number and original frame resolution in the top left corner
 - Histogram Equalizer (disable/enable with **ctrl+h**): Preforms histogram equalization on the image
