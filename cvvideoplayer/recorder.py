@@ -5,6 +5,10 @@ import cv2
 
 
 class Recorder:
+    """
+    In charge of recording what ever the video player is playing. The output video will be saved in
+    output_video_path
+    """
     def __init__(
         self,
         output_video_path: Path = Path("./outputs/recorded_video.mp4"),

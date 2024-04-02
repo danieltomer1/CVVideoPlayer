@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..base_frame_editor import BaseFrameEditor
-from ...utils.video_player_utils import KeymapAction
+from ...utils.video_player_utils import KeyFunction
 
 
 class FrameNormalizer(BaseFrameEditor):
@@ -27,11 +27,11 @@ class FrameNormalizer(BaseFrameEditor):
         self._range_max = input("Set new image max: ")
 
     @property
-    def keymap_actions_to_register(self) -> Optional[Dict[str, KeymapAction]]:
-        return {
-            "ctrl+r": KeymapAction(func=self.set_dynamic_range, description="Set dynamic range"),
-            "ctrl+alt+r": KeymapAction(func=self.show_frame_histogram, description="Show frame histogram"),
-        }
+    def key_function_to_register(self):
+        return [
+            KeyFunction(key="ctrl+r", func=self.set_dynamic_range, description="Set dynamic range"),
+            KeyFunction(key="ctrl+alt+r", func=self.show_frame_histogram, description="Show frame histogram"),
+        ]
 
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":

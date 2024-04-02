@@ -4,10 +4,14 @@ from typing import *
 from cvvideoplayer.frame_editors import BaseFrameEditor
 from cvvideoplayer.utils.bbox_utils import Bbox
 from cvvideoplayer.utils.drawing_utils import draw_rectangle, draw_label
-from cvvideoplayer.utils.video_player_utils import KeymapAction
+from cvvideoplayer.utils.video_player_utils import KeyFunction
 
 
 class BaseBboxPlotter(BaseFrameEditor, ABC):
+    """
+    An abstract class that can be used a parent to any FrameEditor that needs to print bounding boxes on the frame.
+    The self._edit_frame is already implemented and instead the derived class must implement the "get_bboxes" method.
+    """
     def __init__(
         self,
         enable_by_default: bool = False,
@@ -39,12 +43,12 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
         return False
 
     @property
-    def keymap_actions_to_register(self):
-        return {
-            "d": KeymapAction(self.enable_disable, "Show/Hide Detections"),
-            "l": KeymapAction(self.toggle_show_above_bbox_label, "Show/Hide above label"),
-            "b": KeymapAction(self.toggle_show_below_bbox_label, "Show/Hide below label"),
-        }
+    def key_function_to_register(self):
+        return [
+            KeyFunction(key="d", func=self.enable_disable, description="Show/Hide Detections"),
+            KeyFunction(key="l", func=self.toggle_show_above_bbox_label, description="Show/Hide above label"),
+            KeyFunction(key="b", func=self.toggle_show_below_bbox_label, description="Show/Hide below label"),
+        ]
 
     def _edit_frame(self, frame, frame_num):
         for bbox in self.get_bboxes(frame, frame_num):
