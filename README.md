@@ -17,8 +17,8 @@ shortcuts using the VideoPlayer class's API.
 <div align="center"><img src="assets/video_player_design_chart.png" width="500"></div>
 
 The player receives an image from the FrameReader, the frame is then passed to a list of frame editors
-which alter it in any way desirable and return the frame. The frame editors also specify weather or not 
-to preform the edit after the frame has been resized to fit the screen.
+which alter it in any way desirable and return the frame. The frame editors also specify whether 
+to preform the edit after the frame has been resized to fit the screen or before.
 
 ### FrameReader class
 Implements the following protocol:

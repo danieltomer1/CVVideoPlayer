@@ -12,6 +12,7 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
     An abstract class that can be used a parent to any FrameEditor that needs to print bounding boxes on the frame.
     The self._edit_frame is already implemented and instead the derived class must implement the "get_bboxes" method.
     """
+
     def __init__(
         self,
         enable_by_default: bool = False,

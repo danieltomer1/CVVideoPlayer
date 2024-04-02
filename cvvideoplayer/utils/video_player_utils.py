@@ -1,6 +1,5 @@
 import ctypes
 import dataclasses
-import platform
 import subprocess
 from ctypes import wintypes
 from typing import Callable
@@ -37,7 +36,7 @@ def write_text_on_img(img, text, col=10, row=10, font_scale=1.5, color=(255, 255
     return row + spacing
 
 
-def get_forground_window_pid():
+def get_foreground_window_pid():
     h_wnd = ctypes.windll.user32.GetForegroundWindow()
     pid = ctypes.wintypes.DWORD()
     ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
@@ -60,7 +59,7 @@ def get_keyboard_layout():
 
 
 def hist_eq_uint16(img):
-    hist, bins = np.histogram(img.flatten(), 65536, [0, 65536])  # Collect 16 bits histogram (65536 = 2^16).
+    hist, bins = np.histogram(img.flatten(), 65536, (0, 65536))  # Collect 16 bits histogram (65536 = 2^16).
     cdf = hist.cumsum()
 
     cdf_m = np.ma.masked_equal(cdf, 0)  # Find the minimum histogram value (excluding 0)
@@ -70,38 +69,6 @@ def hist_eq_uint16(img):
     # Now we have the look-up table...
     hist_eq_img = cdf[img]
     return hist_eq_img
-
-
-def normalize_image(image, equalize_hist: bool, norm_max=None, norm_min=None):
-    if image.dtype == "uint8":
-        norm_factor = 255
-    elif image.dtype == "uint16":
-        norm_factor = 65535
-    else:
-        raise ValueError(f"image must be either Uint8 or Uint16 but got {image.dtype}")
-
-    image = image.astype("float")
-    image /= norm_factor
-
-    if norm_max is not None:
-        norm_max = image.max() if norm_max == "img_max" else norm_max / norm_factor
-        norm_min = image.min() if norm_min == "img_min" else norm_min / norm_factor
-        image = (image - norm_min) / (norm_max - norm_min)
-        image = np.clip(image, 0, 1)
-
-    if equalize_hist:
-        image = (image * (2**16 - 1)).astype("uint16")
-        image = hist_eq_uint16(image) / (2**16 - 1)
-
-    image = (image * 255).astype("uint8")
-    return image
-
-
-def get_screen_size():
-    if platform.system() == "Linux":
-        return get_screen_size_linux()
-    elif platform.system() == "Windows":
-        return get_screen_size_windows()
 
 
 def get_screen_size_linux():

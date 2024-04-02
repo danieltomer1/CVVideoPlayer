@@ -14,9 +14,11 @@ from .recorder import Recorder
 from .utils.video_player_utils import (
     get_keyboard_layout,
     get_screen_adjusted_frame_size,
-    get_screen_size,
-    get_forground_window_pid,
-    KeyFunction, MODIFIERS,
+    get_foreground_window_pid,
+    KeyFunction,
+    MODIFIERS,
+    get_screen_size_linux,
+    get_screen_size_windows,
 )
 from .utils.windows_vk_dict import VK_CODE_MAP
 
@@ -41,17 +43,16 @@ class VideoPlayer:
         self._frame_num = start_from_frame - 1
         self._modifiers = set()
         self._current_frame = None
-        self._frame_editors: list[BaseFrameEditor] = []
+        self._frame_editors: List[BaseFrameEditor] = []
 
         self._ui_queue = Queue()
         self._keyboard_layout = get_keyboard_layout()
         self._number_action_registered = False
         self._play = False
 
-        self._screen_size = get_screen_size()
         self._resize_factor = 1.0
 
-        self._keymap: Dict[str: KeyFunction] = {}
+        self._keymap: Dict[str:KeyFunction] = {}
         self._add_default_key_functions()
         if add_basic_frame_editors:
             self._add_basic_frame_editors()
@@ -143,10 +144,12 @@ class VideoPlayer:
 
     def _windows_setup(self) -> None:
         self._map_vk_code = lambda x: VK_CODE_MAP[x]
-        self._get_in_focus_window_name = get_forground_window_pid
+        self._get_in_focus_window_name = get_foreground_window_pid
+        self._screen_size = get_screen_size_windows()
 
     def _linux_setup(self) -> None:
         self._map_vk_code = lambda x: chr(x)
+        self._screen_size = get_screen_size_linux()
 
         def _get_in_focus_window_name():
             window = Xlib.display.Display().get_input_focus().focus
@@ -190,9 +193,9 @@ class VideoPlayer:
         for frame_editor in self._frame_editors:
             if not frame_editor.edit_after_resize:
                 frame = frame_editor.edit_frame(frame, self._frame_num)
-                assert frame.shape[:2] == self._original_frame_size, (
-                    "frame editors with edit_after_resize==False can not alter the frame's shape"
-                )
+                assert (
+                    frame.shape[:2] == self._original_frame_size
+                ), "frame editors with edit_after_resize==False can not alter the frame's shape"
 
         frame = self._resize_frame(frame)
 
@@ -253,15 +256,15 @@ class VideoPlayer:
 
     def _add_default_key_functions(self) -> None:
         default_key_functions = [
-            KeyFunction(key="right", func=lambda: self._next_frame(1), description="Go to next frame"),
-            KeyFunction(key="left", func=lambda: self._prev_frame(1), description="Go to previous frame"),
-            KeyFunction(key="ctrl+right", func=lambda: self._next_frame(10), description="Go 10 frames forward"),
-            KeyFunction(key="ctrl+left", func=lambda: self._prev_frame(10), description="Go 10 frames back"),
-            KeyFunction(key="ctrl+shift+right", func=lambda: self._next_frame(50), description="Go 50 frames forward"),
-            KeyFunction(key="ctrl+shift+left", func=lambda: self._prev_frame(50), description="Go 50 frames back"),
-            KeyFunction(key="+", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
-            KeyFunction(key="shift++", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
-            KeyFunction(key="-", func=lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
+            KeyFunction("right", func=lambda: self._next_frame(1), description="Go to next frame"),
+            KeyFunction("left", func=lambda: self._prev_frame(1), description="Go to previous frame"),
+            KeyFunction("ctrl+right", func=lambda: self._next_frame(10), description="Go 10 frames forward"),
+            KeyFunction("ctrl+left", func=lambda: self._prev_frame(10), description="Go 10 frames back"),
+            KeyFunction("ctrl+shift+right", func=lambda: self._next_frame(50), description="Go 50 frames forward"),
+            KeyFunction("ctrl+shift+left", func=lambda: self._prev_frame(50), description="Go 50 frames back"),
+            KeyFunction("+", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            KeyFunction("shift++", lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            KeyFunction("-", lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
         ]
 
         for key_function in default_key_functions:
