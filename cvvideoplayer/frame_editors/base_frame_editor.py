@@ -39,6 +39,22 @@ class BaseFrameEditor(ABC):
 
     @property
     def key_function_to_register(self) -> Optional[List[KeyFunction]]:
+        """
+        Optionally return a list of KeyFunctions to be registered once the frame editor is added to the video player
+        Examples:
+            1. [
+                  KeyFunction(
+                      key="ctrl+f",  # A standard key combination can be any combination of modifiers with a single key
+                      func=self.enable_disable,  # A function that receives no input
+                      description="disable enable"  # A description of whatever this frame editor does
+                  ),
+                  KeyFunction(
+                      key="ctrl+num", # A general num function that handles any number press
+                      func=self._change_id, # this function needs to receive the number as an input
+                      description="change the printed id according to the number pressed"
+                  )
+              ]
+        """
         return None
 
     def edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
@@ -49,7 +65,7 @@ class BaseFrameEditor(ABC):
 
     def setup(self, frame) -> None:
         """
-        Optionally configure the editors initialization parameters according to incoming frame
+        Optionally configure more parameters according to the first incoming frame
         """
         return
 

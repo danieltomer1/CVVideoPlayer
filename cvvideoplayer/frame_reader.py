@@ -12,6 +12,9 @@ RANDOM_STATE = random.Random(42)
 
 
 class FrameReader(abc.ABC):
+    """
+    The frame reader is used in the video player to fetch frames according to a frame number
+    """
     @abc.abstractmethod
     def get_frame(self, frame_num: int) -> Optional[np.ndarray]:
         pass
@@ -22,6 +25,10 @@ class FrameReader(abc.ABC):
 
 
 class LocalFrameReader(FrameReader):
+    """
+    A frame reader used to read any local video file or folder containing the frames as images
+    (as long as there is a number in the name of the image files indicating their order).
+    """
     def __init__(self, source_path):
         """
         Args:
