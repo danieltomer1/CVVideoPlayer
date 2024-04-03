@@ -97,8 +97,10 @@ These are used by the player and cannot be overwritten:
 - "ctrl+left": 10 frames back
 - "ctrl+shift+right": 50 frames forward
 - "ctrl+shift+left": 50 frames back
-- "+": Increase frame size
-- "-": Decrease frame size
+- "+": Double play speed
+- "-": half play speed
+- "ctrl++": Increase frame size
+- "ctrl+-": Decrease frame size
 
 </details>
 
