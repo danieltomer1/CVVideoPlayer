@@ -47,10 +47,10 @@ class VideoPlayer:
 
         self._ui_queue = Queue()
         self._keyboard_layout = get_keyboard_layout()
-        self._number_action_registered = False
         self._play = False
 
         self._resize_factor = 1.0
+        self._play_speed = 1
 
         self._keymap: Dict[str:KeyFunction] = {}
         self._add_default_key_functions()
@@ -80,8 +80,8 @@ class VideoPlayer:
     def register_key_function(self, key_function: KeyFunction) -> None:
         key = key_function.key
         if "+" in key:
-            modifiers = sorted(key.split("+")[:-1])
-            key_without_modifiers = key.split("+")[-1]
+            modifiers = sorted([modifier for modifier in key.split("+")[:-1] if modifier])
+            key_without_modifiers = key.split("+")[-1] or "+"
             key = "+".join(modifiers + [key_without_modifiers])
         else:
             key_without_modifiers = key
@@ -117,9 +117,6 @@ class VideoPlayer:
 
             if key == "mouse_click":
                 cv2.waitKey(30)
-            elif key == keyboard.Key.space:
-                self._play = bool(1 - self._play)
-                self._play_continuously()
             else:
                 self._handle_keyboard_press(key)
 
@@ -218,14 +215,14 @@ class VideoPlayer:
         self.add_frame_editor(HistogramEqualizer())
 
     def _print_keymap(self) -> None:
-        print("space bar: Play/Pause video")
-        for key, action in self._keymap.items():
-            print(f"{key}: {action.description}")
+        for key, key_function in self._keymap.items():
+            if key_function.description:
+                print(f"{key}: {key_function.description}")
         print("***********************************")
 
     def _play_continuously(self) -> None:
         while self._ui_queue.empty() and self._play:
-            self._next_frame(1)
+            self._next_frame(self._play_speed)
             self._show_current_frame()
 
     def _resize_frame(self, frame) -> np.ndarray:
@@ -239,9 +236,10 @@ class VideoPlayer:
 
     def _next_frame(self, num_frames_to_skip=1) -> None:
         if self._frame_num == self._last_frame:
+            self._play = False
             return
 
-        self._frame_num = min(self._frame_num + num_frames_to_skip, len(self._frame_reader) - 1)
+        self._frame_num = min(self._frame_num + num_frames_to_skip, self._last_frame)
         self._current_frame = self._frame_reader.get_frame(self._frame_num)
 
     def _prev_frame(self, num_frames_to_skip=1) -> None:
@@ -254,17 +252,34 @@ class VideoPlayer:
     def _change_frame_resize_factor(self, change_by: float) -> None:
         self._resize_factor = max(0.1, min(1.0, self._resize_factor + change_by))
 
+    def _play_pause(self):
+        self._play = not self._play
+        self._play_continuously()
+
+    def _double_play_speed(self) -> None:
+        self._play_speed = min(16, self._play_speed * 2)
+        self._play = True
+        self._play_continuously()
+
+    def _half_play_speed(self) -> None:
+        self._play_speed = max(1, self._play_speed // 2)
+        self._play = True
+        self._play_continuously()
+
     def _add_default_key_functions(self) -> None:
         default_key_functions = [
-            KeyFunction("right", func=lambda: self._next_frame(1), description="Go to next frame"),
-            KeyFunction("left", func=lambda: self._prev_frame(1), description="Go to previous frame"),
-            KeyFunction("ctrl+right", func=lambda: self._next_frame(10), description="Go 10 frames forward"),
-            KeyFunction("ctrl+left", func=lambda: self._prev_frame(10), description="Go 10 frames back"),
-            KeyFunction("ctrl+shift+right", func=lambda: self._next_frame(50), description="Go 50 frames forward"),
-            KeyFunction("ctrl+shift+left", func=lambda: self._prev_frame(50), description="Go 50 frames back"),
-            KeyFunction("+", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
-            KeyFunction("shift++", lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
-            KeyFunction("-", lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
+            KeyFunction("space", func=lambda: self._play_pause(), description="Play/Pause video"),
+            KeyFunction("right", func=lambda: self._next_frame(1), description="Next frame"),
+            KeyFunction("left", func=lambda: self._prev_frame(1), description="Previous frame"),
+            KeyFunction("ctrl+right", func=lambda: self._next_frame(10), description="10 frames forward"),
+            KeyFunction("ctrl+left", func=lambda: self._prev_frame(10), description="10 frames back"),
+            KeyFunction("ctrl+shift+right", func=lambda: self._next_frame(50), description="50 frames forward"),
+            KeyFunction("ctrl+shift+left", func=lambda: self._prev_frame(50), description="50 frames back"),
+            KeyFunction("ctrl++", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
+            KeyFunction("ctrl+-", lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
+            KeyFunction("+", lambda: self._double_play_speed(), description="Double play speed"),
+            KeyFunction("shift++", lambda: self._double_play_speed(), description=""),
+            KeyFunction("-", lambda: self._half_play_speed(), description="Half play speed"),
         ]
 
         for key_function in default_key_functions:
@@ -278,16 +293,18 @@ class VideoPlayer:
 
         if hasattr(key_without_modifiers, "vk") and key_without_modifiers.vk is not None:
             key_without_modifiers = self._map_vk_code(key_without_modifiers.vk).lower()
-            key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
         else:
             key_without_modifiers = str(key_without_modifiers).replace("'", "").replace("Key.", "")
-            key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
+
+        if not key_without_modifiers == "space":
+            self._play = False
 
         if str(key_without_modifiers).isnumeric():
             general_num_key = "+".join(sorted(self._modifiers) + ["num"])
         else:
             general_num_key = None
 
+        key = "+".join(sorted(self._modifiers) + [key_without_modifiers])
         if general_num_key in self._keymap:
             self._keymap[general_num_key].func(key_without_modifiers)
         elif key in self._keymap:
