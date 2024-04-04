@@ -1,4 +1,4 @@
-<div align="center"><img src="assets/logo.png" width="150"></div>
+<div align="center"><img src="assets/logo.png" width="250"></div>
 
 ## Introduction
 CV video player is a Python-based customizable video player that helps computer vision practitioners
