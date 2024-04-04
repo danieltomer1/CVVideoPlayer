@@ -34,7 +34,7 @@ class FrameReader(abc.ABC):
         pass
 ```
 
-A ready-to-use LocalFrameReader is already implemented and can be used to read 
+A ready-to-use `LocalFrameReader` is already implemented and can be used to read 
 any local video file or folder containing the frames as images 
 (as long as there is a number in the name of the image files indicating their order).
 
@@ -42,12 +42,11 @@ any local video file or folder containing the frames as images
 
 
 <details>
-<summary>FrameEditor class</summary>
+<summary>BaseFrameEditor class</summary>
 
-You can add any number of FrameEditors for the player to apply using
-the VideoPlayer method "add_frame_editor". A FrameEditor is a class
-that needs to inherit BaseFrameEditor and implement 
-the following abstract methods:
+You can add any number of frame editores for the player to apply using
+the VideoPlayer method `add_frame_editor`. A frame editor is an instance of a class
+that inherit `BaseFrameEditor` and implements the following abstract methods:
 
 ```python
 class BaseFrameEditor(ABC):
@@ -81,10 +80,10 @@ class BaseFrameEditor(ABC):
 <details>
 <summary>KeyFunction dataclass</summary>
 
-A KeyFunction defines a mapping between a key and a function with an added description of the
-function's purpose. You can add a new KeyFunction in two ways:
-- Using the video player's method "register_key_function"
-- Using a FrameEditors property "key_functions_to_register" which returns 
+A `KeyFunction` defines a mapping between a key and a function with an added description of the
+function's purpose. You can add a new `KeyFunction` in two ways:
+- Using the video player's method `register_key_function`
+- Using a FrameEditors property `key_functions_to_register` which returns 
 a list of KeyFunctions that will be registered once the FrameEditor is added 
 to the player
 
@@ -107,11 +106,11 @@ These are used by the player and cannot be overwritten:
 <details>
 <summary>Recorder class</summary>
 
-The recorder class is an object that can be used to record whatever is being
+The Recorder class can be used to record whatever is being
 played in the video player. By default, the video will be saved in an "outputs" folder
-which will be created in the CWD.
+which will be automatically created in the CWD.
 
-To use the recorder:
+To use the Recorder:
 ```python
 from cvvideoplayer import VideoPlayer, Recorder
 video_player = VideoPlayer(
@@ -150,4 +149,4 @@ frame editors:
 - Frame Normalizer: Allows the user to print the current frame's intensities histogram and also
 set a dynamic range for the image (see printed keymap at runtime for the used keyboard shortcuts).
 
-Check out the run_video_player.py which also uses the DetectionsCsvPlotter to plot precalculated detection
+Check out the `run_video_player.py` which also uses the DetectionsCsvPlotter to plot precalculated detection
