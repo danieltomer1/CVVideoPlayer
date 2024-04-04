@@ -222,7 +222,7 @@ class VideoPlayer:
 
     def _play_continuously(self) -> None:
         while self._ui_queue.empty() and self._play:
-            self._next_frame(self._play_speed)
+            self._next_frame(self._play_speed) if self._play_speed > 0 else self._prev_frame(-self._play_speed)
             self._show_current_frame()
 
     def _resize_frame(self, frame) -> np.ndarray:
@@ -256,13 +256,25 @@ class VideoPlayer:
         self._play = not self._play
         self._play_continuously()
 
-    def _double_play_speed(self) -> None:
-        self._play_speed = min(16, self._play_speed * 2)
+    def _increase_play_speed(self) -> None:
+        if self._play_speed == -1:
+            self._play_speed = 1
+        elif self._play_speed < -1:
+            self._play_speed = min(-1, self._play_speed // 2)
+        else:
+            self._play_speed = min(16, self._play_speed * 2)
+
         self._play = True
         self._play_continuously()
 
-    def _half_play_speed(self) -> None:
-        self._play_speed = max(1, self._play_speed // 2)
+    def _decrease_play_speed(self) -> None:
+        if self._play_speed == 1:
+            self._play_speed = -1
+        elif self._play_speed > 1:
+            self._play_speed = max(1, self._play_speed // 2)
+        else:
+            self._play_speed = max(-16, self._play_speed * 2)
+
         self._play = True
         self._play_continuously()
 
@@ -277,9 +289,9 @@ class VideoPlayer:
             KeyFunction("ctrl+shift+left", func=lambda: self._prev_frame(50), description="50 frames back"),
             KeyFunction("ctrl++", func=lambda: self._change_frame_resize_factor(0.1), description="Increase frame size"),
             KeyFunction("ctrl+-", lambda: self._change_frame_resize_factor(-0.1), description="Decrease frame size"),
-            KeyFunction("+", lambda: self._double_play_speed(), description="Double play speed"),
-            KeyFunction("shift++", lambda: self._double_play_speed(), description=""),
-            KeyFunction("-", lambda: self._half_play_speed(), description="Half play speed"),
+            KeyFunction("+", lambda: self._increase_play_speed(), description="Increase play speed"),
+            KeyFunction("shift++", lambda: self._increase_play_speed(), description=""),
+            KeyFunction("-", lambda: self._decrease_play_speed(), description="Decrease play speed"),
         ]
 
         for key_function in default_key_functions:
