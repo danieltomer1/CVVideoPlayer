@@ -125,11 +125,12 @@ video_player = VideoPlayer(
 ```python
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 
+VIDEO_OR_FRAME_FOLDER_PATH = <add local path here>
 
 def run_player():
     video_player = VideoPlayer(
         video_name="example_video",
-        frame_reader=LocalFrameReader(source_path="assets/example_video.mp4"),
+        frame_reader=LocalFrameReader(source_path=VIDEO_OR_FRAME_FOLDER_PATH),
         recorder=Recorder(),
         add_basic_frame_editors=True,
     )
