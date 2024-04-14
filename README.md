@@ -55,7 +55,7 @@ class BaseFrameEditor(ABC):
     def edit_after_resize(self) -> bool:
         """
         Returns a boolean indicating whether the edit should happen before the frame is resized to fit the frame or
-        after. True for after...
+        after, True for after.
         """
         pass
 
@@ -67,7 +67,7 @@ class BaseFrameEditor(ABC):
 
         Args:
             frame (): the input frame
-            frame_num ():
+            frame_num (): sequential number
 
         Returns: the edited frame
         """

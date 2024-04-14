@@ -11,7 +11,7 @@ class HistogramEqualizer(BaseFrameEditor):
     @property
     def key_function_to_register(self):
         return [
-            KeyFunction(key="ctrl+h", func=self.enable_disable, description="Enable/Disable frame number"),
+            KeyFunction(key="ctrl+alt+h", func=self.enable_disable, description="Enable/Disable histogram equalization")
         ]
 
     def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:

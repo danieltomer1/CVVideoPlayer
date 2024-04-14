@@ -45,6 +45,7 @@ class FrameNumPrinter(BaseFrameEditor):
             thickness=self._font_thickness,
         )
 
+        # this should be in a separate frame editor
         write_text_on_img(
             frame,
             f"{self._orig_res[1]}x{self._orig_res[0]}",
