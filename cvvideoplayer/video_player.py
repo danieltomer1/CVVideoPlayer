@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 from .input_manager import InputManager, SupportedOS
-from .frame_editors import FrameInfoOverlay, FrameNormalizer, HistogramEqualizer, BaseFrameEditor
+from .frame_editors import FrameInfoOverlay, FrameNormalizer, HistogramEqualizer, BaseFrameEditor, KeyMapOverlay
 from .frame_reader import FrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
@@ -132,6 +132,7 @@ class VideoPlayer:
         self.add_frame_editor(FrameInfoOverlay(video_total_frame_num=len(self._frame_reader)))
         self.add_frame_editor(FrameNormalizer())
         self.add_frame_editor(HistogramEqualizer())
+        self.add_frame_editor(KeyMapOverlay())
 
     def _play_continuously(self) -> None:
         while (not InputManager().has_input()) and self._play:
