@@ -1,7 +1,6 @@
 import ctypes
 import dataclasses
 import subprocess
-from ctypes import wintypes
 from typing import Callable
 
 import cv2
@@ -45,22 +44,6 @@ def get_foreground_window_pid():
     pid = ctypes.wintypes.DWORD()
     ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
     return pid.value
-
-
-def get_keyboard_layout():
-    try:
-        out = subprocess.check_output("xset -q".split(" ")).decode().strip()
-        ind = out.find("LED mask") + 11
-        keyboard_layout_code = out[ind : ind + 8]
-        if keyboard_layout_code == "00000002":
-            return "English"
-        elif keyboard_layout_code == "00001002":
-            return "Hebrew"
-        else:
-            raise Exception("unknown keyboard layout")
-    except Exception as e:
-        return
-
 
 def hist_eq_uint16(img):
     hist, bins = np.histogram(img.flatten(), 65536, (0, 65536))  # Collect 16 bits histogram (65536 = 2^16).

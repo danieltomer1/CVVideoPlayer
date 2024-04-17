@@ -8,7 +8,6 @@ from pynput import keyboard, mouse
 from pynput._util import AbstractListener
 
 from .utils.video_player_utils import (
-    get_keyboard_layout,
     MODIFIERS,
     KeyFunction,
 
@@ -36,9 +35,6 @@ class Singleton(type):
 
 class InputManager(metaclass=Singleton):
     def __init__(self):
-        self._keyboard_layout = get_keyboard_layout()
-        assert self._keyboard_layout != "Hebrew", "Player Does not work with Hebrew keyboard layout"
-
         self._ui_queue = Queue()
         self._keymap: Dict[str,KeyFunction] = {}
         self._modifiers = set()
