@@ -1,7 +1,7 @@
 from pathlib import Path
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 from cvvideoplayer.frame_editors.detections_csv_plotter import DetectionsCsvPlotter
-from cvvideoplayer.frame_editors import FrameInfoOverlay
+from cvvideoplayer.frame_editors import FrameInfoOverlay, KeyMapOverlay
 from cvvideoplayer.input_manager import InputManager
 
 CONFIG = {
@@ -29,6 +29,12 @@ def run_player():
         FrameInfoOverlay(
             top_left_coordinate=(10,10)
         ))
+
+    video_player.add_frame_editor(
+        KeyMapOverlay(
+            top_left_coordinate=(60, 10)
+        ))
+
     InputManager().print_keymap()
 
     with video_player:
