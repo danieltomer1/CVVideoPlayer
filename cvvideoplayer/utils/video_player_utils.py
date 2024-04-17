@@ -40,7 +40,11 @@ def write_text_on_img(img, text, col=10, row=10, font_scale=1.5, color=(255, 255
     """
     Wrapper for cv2's putText with defaults and meaningful arg names
     """
-    cv2.putText(img, text, (col, row), cv2.FONT_HERSHEY_PLAIN, font_scale, color, thickness)
+    fontface = cv2.FONT_HERSHEY_PLAIN
+    (_, height), baseline = cv2.getTextSize(text, fontface, font_scale, thickness)
+    baseline += thickness
+
+    cv2.putText(img, text, (col, row + height + baseline), fontface, font_scale, color, thickness)
     return row + spacing
 
 
