@@ -1,7 +1,7 @@
 from pathlib import Path
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 from cvvideoplayer.frame_editors.detections_csv_plotter import DetectionsCsvPlotter
-from cvvideoplayer.frame_editors import FrameNumPrinter
+from cvvideoplayer.frame_editors import FrameInfoOverlay
 
 CONFIG = {
     "source_path": "assets/example_video.mp4",
@@ -25,8 +25,8 @@ def run_player():
     )
 
     video_player.add_frame_editor(
-        FrameNumPrinter(
-            bottom_left_coordinate=(100,0) # I think it should be named top_left_coordinate
+        FrameInfoOverlay(
+            top_left_coordinate=(10,10)
         ))
 
     with video_player:

@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 from .input_manager import InputManager, SupportedOS
-from .frame_editors import FrameNumPrinter, FrameNormalizer, HistogramEqualizer, BaseFrameEditor
+from .frame_editors import FrameInfoOverlay, FrameNormalizer, HistogramEqualizer, BaseFrameEditor
 from .frame_reader import FrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
@@ -143,7 +143,7 @@ class VideoPlayer:
         cv2.waitKey(1)  # for some reason windows OS requires an additional waitKey to work properly
 
     def _add_basic_frame_editors(self) -> None:
-        self.add_frame_editor(FrameNumPrinter(video_total_frame_num=len(self._frame_reader)))
+        self.add_frame_editor(FrameInfoOverlay(video_total_frame_num=len(self._frame_reader)))
         self.add_frame_editor(FrameNormalizer())
         self.add_frame_editor(HistogramEqualizer())
 
