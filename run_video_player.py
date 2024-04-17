@@ -1,7 +1,7 @@
 from pathlib import Path
 from cvvideoplayer import LocalFrameReader, Recorder, VideoPlayer
 from cvvideoplayer.frame_editors.detections_csv_plotter import DetectionsCsvPlotter
-from cvvideoplayer.frame_editors import FrameInfoOverlay
+
 
 CONFIG = {
     "source_path": "assets/example_video.mp4",
