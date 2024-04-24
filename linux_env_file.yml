@@ -27,6 +27,5 @@ dependencies:
       - opencv-python==4.9.0.80
       - pynput==1.7.5
       - python-xlib==0.33
-      - decord==0.6.0
       - matplotlib==3.8.3
 prefix: /home/user/anaconda3/envs/video_player

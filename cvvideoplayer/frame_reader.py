@@ -6,7 +6,6 @@ from typing import Optional
 
 import cv2
 import numpy as np
-from decord import VideoReader, cpu
 
 RANDOM_STATE = random.Random(42)
 
@@ -55,19 +54,19 @@ class LocalVideoFileReader(FrameReader):
     def __init__(self, local_video_path: str):
         self._video_path = Path(local_video_path)
         assert self._video_path.is_file()
-        self._video_reader = VideoReader(str(self._video_path), ctx=cpu(0))
+        self._video_reader = cv2.VideoCapture(str(self._video_path))
+        self._total_frames = int(self._video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
 
     def get_frame(self, frame_num):
         if frame_num >= len(self):
             return
-        img = self._video_reader[frame_num].asnumpy()
-        if img.shape[-1] == 3:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        assert img is not None, f"no image found in {self._video_reader[frame_num]}"
-        return img
+        self._video_reader.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+        ret, frame = self._video_reader.read()
+        assert ret, f"frame number = {frame_num} is corrupted"
+        return frame
 
     def __len__(self):
-        return len(self._video_reader)
+        return self._total_frames
 
 
 class LocalDirReader(FrameReader):
