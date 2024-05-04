@@ -20,7 +20,6 @@ setup(
         "numpy",
         "opencv-python",
         "pynput",
-        "decord",
         "python-xlib",
         "matplotlib",
     ],

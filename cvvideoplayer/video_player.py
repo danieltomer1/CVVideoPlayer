@@ -257,10 +257,8 @@ class VideoPlayer:
         self._play_continuously()
 
     def _increase_play_speed(self) -> None:
-        if self._play_speed == -1:
+        if self._play_speed <= -1:
             self._play_speed = 1
-        elif self._play_speed < -1:
-            self._play_speed = min(-1, self._play_speed // 2)
         else:
             self._play_speed = min(16, self._play_speed * 2)
 
@@ -268,10 +266,8 @@ class VideoPlayer:
         self._play_continuously()
 
     def _decrease_play_speed(self) -> None:
-        if self._play_speed == 1:
+        if self._play_speed >= 1:
             self._play_speed = -1
-        elif self._play_speed > 1:
-            self._play_speed = max(1, self._play_speed // 2)
         else:
             self._play_speed = max(-16, self._play_speed * 2)
 
