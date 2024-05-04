@@ -4,13 +4,33 @@
 CV video player is a Python-based customizable video player that helps computer vision practitioners
 to develop, analyze, and debug their video-related algorithms and models.
 
+The video player is interactive, operating only with keyboard presses (no UI buttons). The user can register 
+shortcuts using the VideoPlayer class's API.
+
+## See it in action
+<details>
+<summary>Running frame by frame</summary>
+    
+![frame_by_frame](https://github.com/danieltomer1/CVVideoPlayer/assets/163285251/7db8cb8c-0075-416c-9901-aa2f4bb49080)
+</details>
+
+<details>
+<summary>Play/Pause and control play speed and direction</summary>
+    
+![playpause](https://github.com/danieltomer1/CVVideoPlayer/assets/163285251/fcf38b37-ec9c-4250-8c2f-6f123154c1e4)
+</details>
+
+<details>
+<summary>Draw bounding boxes and adjust labels</summary>
+    
+![bboxes](https://github.com/danieltomer1/CVVideoPlayer/assets/163285251/0a6e07de-a015-48b4-b510-2c203e0d69f4)
+</details>
 
 ## Installation
 `pip install cvvideoplayer`
 
 ## Usage
-The player is interactive and operates only with keyboard presses (no buttons). The user can register 
-shortcuts using the VideoPlayer class's API.
+
 
 **Design overview**
 <div align="center"><img src="assets/video_player_design_chart.png" width="500"></div>
