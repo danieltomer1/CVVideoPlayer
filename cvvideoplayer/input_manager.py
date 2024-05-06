@@ -5,11 +5,7 @@ import platform
 
 from pynput import keyboard, mouse
 
-from .utils.video_player_utils import (
-    MODIFIERS,
-    KeyFunction,
-    SupportedOS
-)
+from .utils.video_player_utils import MODIFIERS, KeyFunction, SupportedOS
 from .utils.windows_vk_dict import VK_CODE_MAP
 
 
@@ -34,7 +30,7 @@ class Singleton(type):
 class InputManager(metaclass=Singleton):
     def __init__(self):
         self._ui_queue = Queue()
-        self._keymap: Dict[str,KeyFunction] = {}
+        self._keymap: Dict[str, KeyFunction] = {}
         self._modifiers = set()
         self._current_system = SupportedOS(platform.system())
         self._map_vk_code = make_vk_code_mapper(self._current_system)
@@ -68,7 +64,7 @@ class InputManager(metaclass=Singleton):
 
     def has_input(self):
         return not self._ui_queue.empty()
-    
+
     def get_input(self):
         key = self._ui_queue.get()
         if key not in MODIFIERS:
@@ -85,12 +81,11 @@ class InputManager(metaclass=Singleton):
         self._listeners.append(
             keyboard.Listener(
                 on_press=self._add_key_press_to_queue,
-                on_release=self._add_key_release_to_queue))
-        self._listeners.append(
-            mouse.Listener(
-                on_click=self._add_mouse_click_to_queue
-            ))
-        
+                on_release=self._add_key_release_to_queue,
+            )
+        )
+        self._listeners.append(mouse.Listener(on_click=self._add_mouse_click_to_queue))
+
         for listener in self._listeners:
             listener.start()
 
@@ -99,7 +94,7 @@ class InputManager(metaclass=Singleton):
             listener.stop()
         self._listeners.clear()
 
-    def _add_mouse_click_to_queue(self,*_) -> None:
+    def _add_mouse_click_to_queue(self, *_) -> None:
         if not self.has_input():
             self._add_key_press_to_queue("mouse_click")
 

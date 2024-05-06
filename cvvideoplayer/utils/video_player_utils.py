@@ -54,6 +54,7 @@ def get_foreground_window_pid():
     ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
     return pid.value
 
+
 def hist_eq_uint16(img):
     hist, bins = np.histogram(img.flatten(), 65536, (0, 65536))  # Collect 16 bits histogram (65536 = 2^16).
     cdf = hist.cumsum()

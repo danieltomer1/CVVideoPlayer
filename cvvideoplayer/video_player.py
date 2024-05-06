@@ -14,7 +14,8 @@ from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
     KeyFunction,
     is_window_closed_by_mouse_click,
-    get_screen_size, get_in_focus_window_id,
+    get_screen_size,
+    get_in_focus_window_id,
 )
 
 

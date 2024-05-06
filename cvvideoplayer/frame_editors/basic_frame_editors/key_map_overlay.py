@@ -14,21 +14,21 @@ class KeyMapOverlay(BaseFrameEditor):
         video_total_frame_num=None,
         font_scale: float = 1,
         font_thickness: int = 1,
-        top_left_coordinate: Tuple[int, int] = (70, 10)
+        top_left_coordinate: Tuple[int, int] = (70, 10),
     ):
         super().__init__(enable_by_default)
         self._video_total_frame_num = video_total_frame_num
         self._font_scale = font_scale
         self._font_thickness = font_thickness
         self._tl_coordinate = top_left_coordinate
-        self._key_map:Dict[str:KeyFunction] = {}
-    
+        self._key_map: Dict[str:KeyFunction] = {}
+
     @property
     def key_function_to_register(self):
         return [
             KeyFunction(key="ctrl+k", func=self.enable_disable, description="Show/Hide key map"),
         ]
-    
+
     def setup(self, _) -> None:
         self._key_map = InputManager().clone_keymap()
 
@@ -45,10 +45,10 @@ class KeyMapOverlay(BaseFrameEditor):
                 font_scale=self._font_scale,
                 thickness=self._font_thickness,
             )
-            row += int(20*self._font_scale)
+            row += int(20 * self._font_scale)
 
         return frame
-    
+
     @property
     def edit_after_resize(self) -> bool:
         return True
