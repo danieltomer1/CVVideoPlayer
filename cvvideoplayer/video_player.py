@@ -3,7 +3,6 @@ import time
 from typing import Optional, List
 from functools import partial
 
-import Xlib.display
 import cv2
 import numpy as np
 
@@ -13,33 +12,10 @@ from .frame_reader import FrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
-    get_foreground_window_pid,
     KeyFunction,
-    get_screen_size_linux,
-    get_screen_size_windows,
+    is_window_closed_by_mouse_click,
+    get_screen_size, get_in_focus_window_id,
 )
-
-
-
-
-def get_in_focus_window_id(os: SupportedOS):
-    if os == SupportedOS.LINUX:
-        window = Xlib.display.Display().get_input_focus().focus
-        if isinstance(window, int):
-            return ""
-        return window.get_wm_name()
-    if os == SupportedOS.WINDOWS:
-        return get_foreground_window_pid()
-    else:
-        raise NotImplementedError(f"{os=} not supported")
-
-def get_screen_size(os: SupportedOS):
-    if os == SupportedOS.LINUX:
-        return get_screen_size_linux()
-    if os == SupportedOS.WINDOWS:
-        return get_screen_size_windows()
-    else:
-        raise NotImplementedError(f"{os=} not supported")
 
 
 class VideoPlayer:
@@ -52,7 +28,6 @@ class VideoPlayer:
         add_basic_frame_editors: bool = True,
     ):
         self._video_name = video_name
-        self._window_id = video_name
         self._frame_reader = frame_reader
         self._recorder = recorder
 
@@ -101,8 +76,18 @@ class VideoPlayer:
         InputManager().start()
 
         while not self._exit:
+
             key = InputManager().get_input()
-            if key is not None:
+
+            if is_window_closed_by_mouse_click(window_name=self._video_name):
+                cv2.destroyAllWindows()
+                break
+            if key == "mouse_click":
+                cv2.waitKey(30)
+            elif get_in_focus_window_id(self._current_system) != self._window_id:
+                continue
+            else:
+                InputManager().handle_key_str(key)
                 self._show_current_frame()
 
         cv2.destroyAllWindows()
@@ -113,6 +98,7 @@ class VideoPlayer:
             frame_editor.setup(self._current_frame)
 
         self._show_current_frame()
+        time.sleep(0.5)  # make sure video player is up before checking the window id
         self._window_id = get_in_focus_window_id(self._current_system)
         cv2.waitKey(50)
 
@@ -207,30 +193,21 @@ class VideoPlayer:
     def _on_exit(self) -> None:
         self._exit = True
 
-    def _only_when_in_focus(self, func):
-        def wrapper():
-            if get_in_focus_window_id(self._current_system) == self._window_id:
-                func()
-        return wrapper
-
-    def _make_key_function(self, key, func, description):
-        return KeyFunction(key, func=self._only_when_in_focus(func), description=description)
-
     def _add_default_key_functions(self) -> None:
         default_key_functions = [
-            self._make_key_function("space", self._play_pause, "Play/Pause video"),
-            self._make_key_function("right", partial(self._next_frame, 1), "Next frame"),
-            self._make_key_function("left", partial(self._prev_frame, 1), "Previous frame"),
-            self._make_key_function("ctrl+right", partial(self._next_frame, 10), "10 frames forward"),
-            self._make_key_function("ctrl+left", partial(self._prev_frame, 10), "10 frames back"),
-            self._make_key_function("ctrl+shift+right", partial(self._next_frame, 50), "50 frames forward"),
-            self._make_key_function("ctrl+shift+left", partial(self._prev_frame, 50), "50 frames back"),
-            self._make_key_function("ctrl++", partial(self._change_frame_resize_factor, 0.1), "Increase frame size"),
-            self._make_key_function("ctrl+-", partial(self._change_frame_resize_factor, -0.1), "Decrease frame size"),
-            self._make_key_function("+", self._increase_play_speed, "Increase play speed"),
-            self._make_key_function("shift++", self._increase_play_speed, ""),
-            self._make_key_function("-", self._decrease_play_speed, "Decrease play speed"),
-            self._make_key_function("esc", self._on_exit, "Exit gracefully"),
+            KeyFunction("space", self._play_pause, "Play/Pause video"),
+            KeyFunction("right", partial(self._next_frame, 1), "Next frame"),
+            KeyFunction("left", partial(self._prev_frame, 1), "Previous frame"),
+            KeyFunction("ctrl+right", partial(self._next_frame, 10), "10 frames forward"),
+            KeyFunction("ctrl+left", partial(self._prev_frame, 10), "10 frames back"),
+            KeyFunction("ctrl+shift+right", partial(self._next_frame, 50), "50 frames forward"),
+            KeyFunction("ctrl+shift+left", partial(self._prev_frame, 50), "50 frames back"),
+            KeyFunction("ctrl++", partial(self._change_frame_resize_factor, 0.1), "Increase frame size"),
+            KeyFunction("ctrl+-", partial(self._change_frame_resize_factor, -0.1), "Decrease frame size"),
+            KeyFunction("+", self._increase_play_speed, "Increase play speed"),
+            KeyFunction("shift++", self._increase_play_speed, ""),
+            KeyFunction("-", self._decrease_play_speed, "Decrease play speed"),
+            KeyFunction("esc", self._on_exit, "Exit gracefully"),
         ]
 
         for key_function in default_key_functions:

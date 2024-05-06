@@ -1,23 +1,18 @@
 import dataclasses
-from enum import Enum
 from typing import Dict
 from queue import Queue
 import platform
 
 from pynput import keyboard, mouse
-from pynput._util import AbstractListener
 
 from .utils.video_player_utils import (
     get_keyboard_layout,
     MODIFIERS,
     KeyFunction,
-
+    SupportedOS
 )
 from .utils.windows_vk_dict import VK_CODE_MAP
 
-class SupportedOS(Enum):
-    LINUX = "Linux"
-    WINDOWS = "Windows"
 
 def make_vk_code_mapper(os: SupportedOS):
     if os == SupportedOS.LINUX:
@@ -27,12 +22,15 @@ def make_vk_code_mapper(os: SupportedOS):
     else:
         raise NotImplementedError(f"{os=} not supported")
 
+
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class InputManager(metaclass=Singleton):
     def __init__(self):
@@ -44,7 +42,7 @@ class InputManager(metaclass=Singleton):
         self._modifiers = set()
         self._current_system = SupportedOS(platform.system())
         self._map_vk_code = make_vk_code_mapper(self._current_system)
-        self._listeners:list[AbstractListener] = []
+        self._listeners = []
 
     def register_key_function(self, key_function):
         key = key_function.key
@@ -76,14 +74,16 @@ class InputManager(metaclass=Singleton):
         return not self._ui_queue.empty()
     
     def get_input(self):
-        key = None
-        if self.has_input():
-            key = self._ui_queue.get(block=False)
-            if key not in MODIFIERS:
-                key = self._handle_simple_key(key)
-        if key is not None:
-            self._keymap[key].func()
+        key = self._ui_queue.get()
+        if key not in MODIFIERS:
+            key = self._convert_key_to_str(key)
         return key
+
+    def handle_key_str(self, key_str: str):
+        if key_str in self._keymap:
+            self._keymap[key_str].func()
+        else:
+            print(f"{key_str} is not registered in the keymap")
 
     def start(self):
         self._listeners.append(
@@ -135,7 +135,10 @@ class InputManager(metaclass=Singleton):
     def clone_keymap(self):
         return {key: dataclasses.replace(key_function) for key, key_function in self._keymap.items()}
 
-    def _handle_simple_key(self, key):
+    def _convert_key_to_str(self, key):
+        if key == "mouse_click":
+            return key
+
         if str(key) == "<65437>":  # work around for a bug in pynput model that does not convert 5 for some reason
             key = "5"
 
@@ -153,8 +156,5 @@ class InputManager(metaclass=Singleton):
 
         if general_num_key in self._keymap:
             return general_num_key
-        if key in self._keymap:
-            return key
-        
-        print(f"Warning: {key} is not registered in the keymap")
-        return None
+
+        return key

@@ -2,11 +2,14 @@ import ctypes
 import dataclasses
 import subprocess
 from ctypes import wintypes
+from enum import Enum
 from typing import Callable
 
+import Xlib
 import cv2
 import numpy as np
 from pynput import keyboard
+
 
 MODIFIERS = {
     keyboard.Key.ctrl,
@@ -19,6 +22,11 @@ MODIFIERS = {
     keyboard.Key.shift_r,
     keyboard.Key.shift_l,
 }
+
+
+class SupportedOS(Enum):
+    LINUX = "Linux"
+    WINDOWS = "Windows"
 
 
 @dataclasses.dataclass
@@ -107,3 +115,28 @@ def get_screen_adjusted_frame_size(screen_size, frame_width, frame_height):
         adjusted_w *= h_ratio
 
     return int(adjusted_w), int(adjusted_h)
+
+
+def is_window_closed_by_mouse_click(window_name):
+    return cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1
+
+
+def get_in_focus_window_id(os: SupportedOS):
+    if os == SupportedOS.LINUX:
+        window = Xlib.display.Display().get_input_focus().focus
+        if isinstance(window, int):
+            return ""
+        return window.get_wm_name()
+    if os == SupportedOS.WINDOWS:
+        return get_foreground_window_pid()
+    else:
+        raise NotImplementedError(f"{os=} not supported")
+
+
+def get_screen_size(os: SupportedOS):
+    if os == SupportedOS.LINUX:
+        return get_screen_size_linux()
+    if os == SupportedOS.WINDOWS:
+        return get_screen_size_windows()
+    else:
+        raise NotImplementedError(f"{os=} not supported")
