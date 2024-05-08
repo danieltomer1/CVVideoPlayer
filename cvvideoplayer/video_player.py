@@ -205,9 +205,11 @@ class VideoPlayer:
             KeyFunction("ctrl+shift+right", partial(self._next_frame, 50), "50 frames forward"),
             KeyFunction("ctrl+shift+left", partial(self._prev_frame, 50), "50 frames back"),
             KeyFunction("ctrl++", partial(self._change_frame_resize_factor, 0.1), "Increase frame size"),
+            KeyFunction("ctrl+=", partial(self._change_frame_resize_factor, 0.1), ""),
             KeyFunction("ctrl+-", partial(self._change_frame_resize_factor, -0.1), "Decrease frame size"),
             KeyFunction("+", self._increase_play_speed, "Increase play speed"),
             KeyFunction("shift++", self._increase_play_speed, ""),
+            KeyFunction("=", self._increase_play_speed, ""),
             KeyFunction("-", self._decrease_play_speed, "Decrease play speed"),
             KeyFunction("esc", self._on_exit, "Exit gracefully"),
         ]
