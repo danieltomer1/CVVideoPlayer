@@ -2,11 +2,14 @@ import ctypes
 import dataclasses
 import subprocess
 from ctypes import wintypes
+from enum import Enum
 from typing import Callable
 
+import Xlib
 import cv2
 import numpy as np
 from pynput import keyboard
+
 
 MODIFIERS = {
     keyboard.Key.ctrl,
@@ -21,6 +24,11 @@ MODIFIERS = {
 }
 
 
+class SupportedOS(Enum):
+    LINUX = "Linux"
+    WINDOWS = "Windows"
+
+
 @dataclasses.dataclass
 class KeyFunction:
     key: str
@@ -32,7 +40,11 @@ def write_text_on_img(img, text, col=10, row=10, font_scale=1.5, color=(255, 255
     """
     Wrapper for cv2's putText with defaults and meaningful arg names
     """
-    cv2.putText(img, text, (col, row), cv2.FONT_HERSHEY_PLAIN, font_scale, color, thickness)
+    fontface = cv2.FONT_HERSHEY_PLAIN
+    (_, height), baseline = cv2.getTextSize(text, fontface, font_scale, thickness)
+    baseline += thickness
+
+    cv2.putText(img, text, (col, row + height + baseline), fontface, font_scale, color, thickness)
     return row + spacing
 
 
@@ -41,21 +53,6 @@ def get_foreground_window_pid():
     pid = ctypes.wintypes.DWORD()
     ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
     return pid.value
-
-
-def get_keyboard_layout():
-    try:
-        out = subprocess.check_output("xset -q".split(" ")).decode().strip()
-        ind = out.find("LED mask") + 11
-        keyboard_layout_code = out[ind : ind + 8]
-        if keyboard_layout_code == "00000002":
-            return "English"
-        elif keyboard_layout_code == "00001002":
-            return "Hebrew"
-        else:
-            raise Exception("unknown keyboard layout")
-    except Exception as e:
-        return
 
 
 def hist_eq_uint16(img):
@@ -107,3 +104,28 @@ def get_screen_adjusted_frame_size(screen_size, frame_width, frame_height):
         adjusted_w *= h_ratio
 
     return int(adjusted_w), int(adjusted_h)
+
+
+def is_window_closed_by_mouse_click(window_name):
+    return cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1
+
+
+def get_in_focus_window_id(os: SupportedOS):
+    if os == SupportedOS.LINUX:
+        window = Xlib.display.Display().get_input_focus().focus
+        if isinstance(window, int):
+            return ""
+        return window.get_wm_name()
+    if os == SupportedOS.WINDOWS:
+        return get_foreground_window_pid()
+    else:
+        raise NotImplementedError(f"{os=} not supported")
+
+
+def get_screen_size(os: SupportedOS):
+    if os == SupportedOS.LINUX:
+        return get_screen_size_linux()
+    if os == SupportedOS.WINDOWS:
+        return get_screen_size_windows()
+    else:
+        raise NotImplementedError(f"{os=} not supported")

@@ -1,6 +1,7 @@
 """
 This module contains an drawing routines based on OpenCV.
 """
+
 from typing import Tuple, Optional
 
 import cv2
@@ -28,14 +29,14 @@ def draw_rectangle(
     tr = int(x + w), int(y)
     bl = int(x), int(y + h)
 
-    cv2.line(image, tl, (tl[0] + w//4, tl[1]), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, tl, (tl[0], tl[1] + h//4), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, tr, (tr[0] - w//4, tr[1]), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, tr, (tr[0], tr[1] + h//4), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, bl, (bl[0] + w//4, bl[1]), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, bl, (bl[0], bl[1] - h//4), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, br, (br[0] - w//4, br[1]), color, thickness, lineType=cv2.LINE_AA)
-    cv2.line(image, br, (br[0], br[1] - h//4), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, tl, (tl[0] + w // 4, tl[1]), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, tl, (tl[0], tl[1] + h // 4), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, tr, (tr[0] - w // 4, tr[1]), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, tr, (tr[0], tr[1] + h // 4), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, bl, (bl[0] + w // 4, bl[1]), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, bl, (bl[0], bl[1] - h // 4), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, br, (br[0] - w // 4, br[1]), color, thickness, lineType=cv2.LINE_AA)
+    cv2.line(image, br, (br[0], br[1] - h // 4), color, thickness, lineType=cv2.LINE_AA)
 
 
 def draw_polygon(
