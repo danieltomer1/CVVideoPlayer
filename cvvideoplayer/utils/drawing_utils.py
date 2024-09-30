@@ -28,6 +28,8 @@ def draw_rectangle(
 
     tr = int(x + w), int(y)
     bl = int(x), int(y + h)
+    w = int(w)
+    h = int(h)
 
     cv2.line(image, tl, (tl[0] + w // 4, tl[1]), color, thickness, lineType=cv2.LINE_AA)
     cv2.line(image, tl, (tl[0], tl[1] + h // 4), color, thickness, lineType=cv2.LINE_AA)

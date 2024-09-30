@@ -72,7 +72,15 @@ class InputManager(metaclass=Singleton):
         return key
 
     def handle_key_str(self, key_str: str):
-        if key_str in self._keymap:
+        key_without_modifiers = key_str.split("+")[-1]
+        if key_without_modifiers.isnumeric():
+            general_num_key = key_str.replace(key_without_modifiers, "num")
+        else:
+            general_num_key = None
+
+        if general_num_key in self._keymap:
+            self._keymap[general_num_key].func(key_without_modifiers)
+        elif key_str in self._keymap:
             self._keymap[key_str].func()
         else:
             print(f"{key_str} is not registered in the keymap")
@@ -138,14 +146,6 @@ class InputManager(metaclass=Singleton):
         else:
             key = str(key).replace("'", "").replace("Key.", "")
 
-        if str(key).isnumeric():
-            general_num_key = "+".join(sorted(self._modifiers) + ["num"])
-        else:
-            general_num_key = None
-
         key = "+".join(sorted(self._modifiers) + [key])
-
-        if general_num_key in self._keymap:
-            return general_num_key
 
         return key
