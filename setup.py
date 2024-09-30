@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cvvideoplayer",
-    version="0.1.3",
+    version="0.1.5",
     author="Daniel Tomer",
     author_email="danieltomer1@gmail.com",
     description="moduler multi purpose video player for python",
