@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import Optional, List
 
 import numpy as np
@@ -6,24 +5,42 @@ import numpy as np
 from ..utils.video_player_utils import KeyFunction
 
 
-class BaseFrameEditor(ABC):
+class BaseFrameEditCallback:
 
     def __init__(self, enable_by_default):
         self._enabled = enable_by_default
 
     @property
-    @abstractmethod
-    def edit_after_resize(self) -> bool:
-        """
-        Returns a boolean indicating whether the edit should happen before the frame is resized to fit the frame or
-        after. True for after...
-        """
-        pass
+    def enabled(self):
+        return self._enabled
 
-    @abstractmethod
-    def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def setup(self, frame) -> None:
         """
-        Here is where the editing happens. The function receives a frame and frame number and should return the frame
+        Optionally configure more parameters according to the first incoming frame
+        """
+
+    def teardown(self) -> None:
+        """
+        Optionally define how the editor should close when video player is closed
+        """
+
+    def before_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+        """
+        This function receives the frame before it has been resized and should return the frame
+        after it has been altered in any way desirable by the user. In this hook you ere not allowed to change the
+        frame's size.
+
+        Args:
+            frame (): the input frame
+            frame_num ():
+
+        Returns: the edited frame
+        """
+        return frame
+
+    def after_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+        """
+        This function receives the frame after it has been resized to fit the screen size and should return the frame
         after it has been altered in any way desirable by the user
 
         Args:
@@ -32,7 +49,7 @@ class BaseFrameEditor(ABC):
 
         Returns: the edited frame
         """
-        pass
+        return frame
 
     def enable_disable(self):
         self._enabled = not self._enabled
@@ -57,20 +74,4 @@ class BaseFrameEditor(ABC):
         """
         return None
 
-    def edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
-        if not self._enabled:
-            return frame
-        else:
-            return self._edit_frame(frame, frame_num)
 
-    def setup(self, frame) -> None:
-        """
-        Optionally configure more parameters according to the first incoming frame
-        """
-        return
-
-    def teardown(self) -> None:
-        """
-        Optionally define how the editor should close when video player is closed
-        """
-        return

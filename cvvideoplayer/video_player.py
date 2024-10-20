@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 from .input_manager import InputManager, SupportedOS
-from .frame_editors import FrameInfoOverlay, FrameNormalizer, HistogramEqualizer, BaseFrameEditor, KeyMapOverlay
+from .frame_editors import BaseFrameEditCallback
 from .frame_reader import FrameReader
 from .recorder import Recorder
 from .utils.video_player_utils import (
@@ -25,8 +25,8 @@ class VideoPlayer:
         video_name: str,
         frame_reader: FrameReader,
         start_from_frame: int = 0,
+        frame_edit_callbacks: List[BaseFrameEditCallback] = None,
         recorder: Optional[Recorder] = None,
-        add_basic_frame_editors: bool = True,
     ):
         self._video_name = video_name
         self._frame_reader = frame_reader
@@ -38,17 +38,13 @@ class VideoPlayer:
         self._screen_size = get_screen_size(self._current_system)
 
         self._current_frame = None
-        self._frame_editors: List[BaseFrameEditor] = []
+        self._frame_edit_callbacks: List[BaseFrameEditCallback] = frame_edit_callbacks
 
         self._play = False
 
         self._resize_factor = 1.0
         self._play_speed = 1
         self._exit = False
-
-        if add_basic_frame_editors:
-            self._add_basic_frame_editors()
-
         self._add_default_key_functions()
 
     def __enter__(self):
@@ -57,19 +53,8 @@ class VideoPlayer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._recorder is not None:
             self._recorder.teardown()
-        for frame_editor in self._frame_editors:
-            frame_editor.teardown()
-
-    def add_frame_editor(self, frame_editor: BaseFrameEditor) -> None:
-        assert isinstance(frame_editor, BaseFrameEditor), "frame_editor must be a derived class of BaseFrameEditor"
-        self._frame_editors.append(frame_editor)
-        if frame_editor.key_function_to_register is not None:
-            for key_function in frame_editor.key_function_to_register:
-                assert isinstance(key_function, KeyFunction), (
-                    f"{frame_editor.__class__.__name__} is trying to register a keymap action"
-                    f" (key = {key_function.key}) which is not an instance of KeymapAction"
-                )
-                InputManager().register_key_function(key_function)
+        for callback in self._frame_edit_callbacks:
+            callback.teardown()
 
     def run(self) -> None:
         self._setup()
@@ -93,11 +78,23 @@ class VideoPlayer:
 
         cv2.destroyAllWindows()
 
+    def _setup_callbacks(self):
+        for callback in self._frame_edit_callbacks:
+            assert (isinstance(callback, BaseFrameEditCallback),
+                    "frame_editor must be a derived class of BaseFrameEditor")
+            if callback.key_function_to_register is not None:
+                for key_function in callback.key_function_to_register:
+                    assert isinstance(key_function, KeyFunction), (
+                        f"{callback.__class__.__name__} is trying to register a key function"
+                        f" (key = {key_function.key}) which is not an instance of KeyFunction"
+                    )
+                    InputManager().register_key_function(key_function)
+
+            callback.setup(self._current_frame)
+
     def _setup(self) -> None:
         self._next_frame(1)
-        for frame_editor in self._frame_editors:
-            frame_editor.setup(self._current_frame)
-
+        self._setup_callbacks()
         self._show_current_frame()
         time.sleep(0.5)  # make sure video player is up before checking the window id
         self._window_id = get_in_focus_window_id(self._current_system)
@@ -106,19 +103,21 @@ class VideoPlayer:
     def _show_current_frame(self) -> None:
         frame = self._current_frame.copy()
 
-        for frame_editor in self._frame_editors:
-            if not frame_editor.edit_after_resize:
-                shape_before_edit = frame.shape[:2]
-                frame = frame_editor.edit_frame(frame, self._frame_num)
-                assert (
-                    frame.shape[:2] == shape_before_edit
-                ), "frame editors with edit_after_resize==False can not alter the frame's shape"
+        for callback in self._frame_edit_callbacks:
+            if not callback.enabled:
+                continue
+            shape_before_edit = frame.shape[:2]
+            frame = callback.before_frame_resize(frame, self._frame_num)
+            assert (
+                frame.shape[:2] == shape_before_edit
+            ), "callbacks can not alter the frame's shape before resize"
 
         frame = self._resize_frame(frame)
 
-        for frame_editor in self._frame_editors:
-            if frame_editor.edit_after_resize:
-                frame = frame_editor.edit_frame(frame, self._frame_num)
+        for callback in self._frame_edit_callbacks:
+            if not callback.enabled:
+                continue
+            frame = callback.after_frame_resize(frame, self._frame_num)
 
         frame = self._resize_frame(frame)
 
@@ -128,12 +127,6 @@ class VideoPlayer:
         cv2.imshow(winname=self._video_name, mat=frame)
         cv2.waitKey(10)
         cv2.waitKey(1)  # for some reason windows OS requires an additional waitKey to work properly
-
-    def _add_basic_frame_editors(self) -> None:
-        self.add_frame_editor(FrameInfoOverlay(video_total_frame_num=len(self._frame_reader)))
-        self.add_frame_editor(FrameNormalizer())
-        self.add_frame_editor(HistogramEqualizer())
-        self.add_frame_editor(KeyMapOverlay())
 
     def _play_continuously(self) -> None:
         while (not InputManager().has_input()) and self._play:
