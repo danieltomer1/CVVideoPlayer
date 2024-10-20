@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import *
 
-from cvvideoplayer.frame_editors import BaseFrameEditor
+from cvvideoplayer.frame_editors import BaseFrameEditCallback
 from cvvideoplayer.utils.bbox_utils import Bbox
 from cvvideoplayer.utils.drawing_utils import draw_rectangle, draw_label
 from cvvideoplayer.utils.video_player_utils import KeyFunction
 
 
-class BaseBboxPlotter(BaseFrameEditor, ABC):
+class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     """
     An abstract class that can be used a parent to any FrameEditor that needs to print bounding boxes on the frame.
     The self._edit_frame is already implemented and instead the derived class must implement the "get_bboxes" method.
@@ -40,10 +40,6 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
         pass
 
     @property
-    def edit_after_resize(self) -> bool:
-        return False
-
-    @property
     def key_function_to_register(self):
         return [
             KeyFunction(key="d", func=self.enable_disable, description="Show/Hide Detections"),
@@ -53,7 +49,7 @@ class BaseBboxPlotter(BaseFrameEditor, ABC):
             KeyFunction(key="ctrl+u", func=lambda: self.change_font_size(-0.1), description="decrease label size"),
         ]
 
-    def _edit_frame(self, frame, frame_num):
+    def before_frame_resize(self, frame, frame_num):
         for bbox in self.get_bboxes(frame, frame_num):
             draw_rectangle(
                 frame,

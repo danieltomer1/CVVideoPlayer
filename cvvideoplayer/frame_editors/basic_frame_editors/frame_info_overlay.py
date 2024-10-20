@@ -2,11 +2,11 @@ from typing import Tuple
 
 import numpy as np
 
-from ..base_frame_editor import BaseFrameEditor
+from ..base_frame_edit_callback import BaseFrameEditCallback
 from ...utils.video_player_utils import write_text_on_img, KeyFunction
 
 
-class FrameInfoOverlay(BaseFrameEditor):
+class FrameInfoOverlay(BaseFrameEditCallback):
     def __init__(
         self,
         enable_by_default: bool = True,
@@ -31,7 +31,7 @@ class FrameInfoOverlay(BaseFrameEditor):
     def setup(self, frame) -> None:
         self._orig_res = frame.shape
 
-    def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         text = f"{frame_num}"
         if self._video_total_frame_num is not None:
             text += f"/{self._video_total_frame_num - 1}"
@@ -55,6 +55,3 @@ class FrameInfoOverlay(BaseFrameEditor):
         )
         return frame
 
-    @property
-    def edit_after_resize(self) -> bool:
-        return True
