@@ -43,10 +43,10 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     def key_function_to_register(self):
         return [
             KeyFunction(key="d", func=self.enable_disable, description="Show/Hide Detections"),
-            KeyFunction(key="l", func=self.toggle_show_above_bbox_label, description="Show/Hide above label"),
-            KeyFunction(key="b", func=self.toggle_show_below_bbox_label, description="Show/Hide below label"),
-            KeyFunction(key="ctrl+i", func=lambda: self.change_font_size(0.1), description="increase label size"),
-            KeyFunction(key="ctrl+u", func=lambda: self.change_font_size(-0.1), description="decrease label size"),
+            KeyFunction(key="l", func=self._toggle_show_above_bbox_label, description="Show/Hide above label"),
+            KeyFunction(key="b", func=self._toggle_show_below_bbox_label, description="Show/Hide below label"),
+            KeyFunction(key="ctrl+i", func=lambda: self._change_font_size(0.1), description="increase label size"),
+            KeyFunction(key="ctrl+u", func=lambda: self._change_font_size(-0.1), description="decrease label size"),
         ]
 
     def before_frame_resize(self, frame, frame_num):
@@ -90,11 +90,11 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
                 )
         return frame
 
-    def toggle_show_above_bbox_label(self):
+    def _toggle_show_above_bbox_label(self):
         self._show_above_bbox_label = not self._show_above_bbox_label
 
-    def toggle_show_below_bbox_label(self):
+    def _toggle_show_below_bbox_label(self):
         self._show_below_bbox_label = not self._show_below_bbox_label
 
-    def change_font_size(self, by: float):
+    def _change_font_size(self, by: float):
         self._font_scale = max(0.1, min(5.0, self._font_scale + by))
