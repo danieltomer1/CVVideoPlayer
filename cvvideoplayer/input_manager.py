@@ -1,4 +1,4 @@
-import dataclasses
+from collections import defaultdict
 from typing import Dict, Union
 from queue import Queue
 import platform
@@ -35,6 +35,7 @@ class InputManager(metaclass=Singleton):
         self._current_system = SupportedOS(platform.system())
         self._map_vk_code = make_vk_code_mapper(self._current_system)
         self._listeners = []
+        self._keymap_description: Dict[str, list] = defaultdict(list)
 
     def register_key_function(self, key_function: KeyFunction, callback_name: str) -> None:
         key = key_function.key
@@ -57,6 +58,8 @@ class InputManager(metaclass=Singleton):
             )
 
         self._keymap[key] = key_function
+        if key_function.description:
+            self._keymap_description[callback_name].append(f"{key:20.20}: {key_function.description:60.60}")
 
     def unregister_key_function(self, key: str) -> None:
         if key in self._keymap:
@@ -121,18 +124,11 @@ class InputManager(metaclass=Singleton):
             if str(key) in self._modifiers:
                 self._modifiers.remove(key)
 
-    def get_keymap_description(self) -> str:
-        result = "Keymap:\n"
-        for key, key_function in self._keymap.items():
-            if key_function.description:
-                result += f"\t{key:20} {key_function.description}\n"
-        return result
+    def get_keymap_description(self) -> dict:
+        return self._keymap_description
 
     def print_keymap(self):
         print(self.get_keymap_description())
-
-    def clone_keymap(self):
-        return {key: dataclasses.replace(key_function) for key, key_function in self._keymap.items()}
 
     def _convert_key_to_str(self, key: Union[keyboard.Key, keyboard.KeyCode, str]) -> str:
         if key == "mouse_click":

@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Tuple
 
 import numpy as np
 
@@ -13,22 +13,20 @@ class KeyMapOverlay(BaseFrameEditCallback):
         enable_by_default: bool = True,
         font_scale: float = 1,
         font_thickness: int = 1,
+        font_color: Tuple[int, int, int] = (255, 255, 125),
         top_left_coordinate: Tuple[int, int] = (90, 10),
     ):
         super().__init__(enable_by_default)
         self._font_scale = font_scale
         self._font_thickness = font_thickness
+        self._font_color = font_color
         self._tl_coordinate = top_left_coordinate
-        self._key_map: Dict[str:KeyFunction] = {}
 
     @property
     def key_function_to_register(self):
         return [
             KeyFunction(key="ctrl+k", func=self.enable_disable, description="Show/Hide key map"),
         ]
-
-    def setup(self, _) -> None:
-        self._key_map = InputManager().clone_keymap()
 
     def after_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
         row = self._tl_coordinate[0]
@@ -37,21 +35,32 @@ class KeyMapOverlay(BaseFrameEditCallback):
             "Available keyboard shortcuts (hide with ctrl+k):",
             row=row,
             col=self._tl_coordinate[1],
-            font_scale=self._font_scale,
+            font_scale=self._font_scale * 1.2,
             thickness=self._font_thickness + 1,
+            color=self._font_color
         )
         row += int(30 * self._font_scale)
-        for key, key_function in self._key_map.items():
-            if not key_function.description:
-                continue
+        for callback_name, keys in InputManager().get_keymap_description().items():
             write_text_on_img(
                 frame,
-                f"{key:20.20}{key_function.description:60.60}",
+                f"{callback_name}:",
                 row=row,
                 col=self._tl_coordinate[1],
                 font_scale=self._font_scale,
-                thickness=self._font_thickness,
+                thickness=self._font_thickness + 1,
+                color=self._font_color
             )
             row += int(20 * self._font_scale)
-
+            for key in keys:
+                write_text_on_img(
+                    frame,
+                    key,
+                    row=row,
+                    col=self._tl_coordinate[1],
+                    font_scale=self._font_scale,
+                    thickness=self._font_thickness,
+                    color=self._font_color
+                )
+                row += int(20 * self._font_scale)
+            row += int(10 * self._font_scale)
         return frame

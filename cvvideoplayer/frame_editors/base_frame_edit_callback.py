@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 
 import numpy as np
 
@@ -55,7 +55,7 @@ class BaseFrameEditCallback:
         self._enabled = not self._enabled
 
     @property
-    def key_function_to_register(self) -> Optional[List[KeyFunction]]:
+    def key_function_to_register(self) -> List[KeyFunction]:
         """
         Optionally return a list of KeyFunctions to be registered once the frame editor is added to the video player
         Examples:
@@ -72,6 +72,4 @@ class BaseFrameEditCallback:
                   )
               ]
         """
-        return None
-
-
+        return []

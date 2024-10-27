@@ -80,15 +80,14 @@ class VideoPlayer:
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
-            assert (isinstance(callback, BaseFrameEditCallback),
-                    "frame_editor must be a derived class of BaseFrameEditor")
-            if callback.key_function_to_register is not None:
-                for key_function in callback.key_function_to_register:
-                    assert isinstance(key_function, KeyFunction), (
-                        f"{callback.__class__.__name__} is trying to register a key function"
-                        f" (key = {key_function.key}) which is not an instance of KeyFunction"
-                    )
-                    InputManager().register_key_function(key_function)
+            assert isinstance(callback, BaseFrameEditCallback), ("frame_editor must be a derived class of"
+                                                                 " BaseFrameEditor")
+            for key_function in callback.key_function_to_register:
+                assert isinstance(key_function, KeyFunction), (
+                    f"{callback.__class__.__name__} is trying to register a key function"
+                    f" (key = {key_function.key}) which is not an instance of KeyFunction"
+                )
+                InputManager().register_key_function(key_function, callback.__class__.__name__)
 
             callback.setup(self._current_frame)
 
