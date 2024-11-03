@@ -74,7 +74,7 @@ class VideoPlayer:
                 continue
             else:
                 InputManager().handle_key_str(key)
-                self._show_current_frame()
+                self._play_continuously() if self._play else self._show_current_frame()
 
         cv2.destroyAllWindows()
 
@@ -151,12 +151,15 @@ class VideoPlayer:
         self._current_frame_num = max(0, min(self._current_frame_num + change_by, self._last_frame))
         self._current_frame = self.frame_reader.get_frame(self._current_frame_num)
 
+    def _pause_and_change_current_frame(self, change_by: int) -> None:
+        self._play = False
+        self._change_current_frame(change_by)
+
     def _change_frame_resize_factor(self, change_by: float) -> None:
         self._resize_factor = max(0.1, min(1.0, self._resize_factor + change_by))
 
     def _play_pause(self):
         self._play = not self._play
-        self._play_continuously()
 
     def _increase_play_speed(self) -> None:
         if self._play_speed <= -1:
@@ -182,12 +185,12 @@ class VideoPlayer:
     def _add_default_key_functions(self) -> None:
         default_key_functions = [
             KeyFunction("space", self._play_pause, "Play/Pause video"),
-            KeyFunction("right", partial(self._change_current_frame, 1), "Next frame"),
-            KeyFunction("left", partial(self._change_current_frame, -1), "Previous frame"),
-            KeyFunction("ctrl+right", partial(self._change_current_frame, 10), "10 frames forward"),
-            KeyFunction("ctrl+left", partial(self._change_current_frame, -10), "10 frames back"),
-            KeyFunction("ctrl+shift+right", partial(self._change_current_frame, 50), "50 frames forward"),
-            KeyFunction("ctrl+shift+left", partial(self._change_current_frame, -50), "50 frames back"),
+            KeyFunction("right", partial(self._pause_and_change_current_frame, 1), "Next frame"),
+            KeyFunction("left", partial(self._pause_and_change_current_frame, -1), "Previous frame"),
+            KeyFunction("ctrl+right", partial(self._pause_and_change_current_frame, 10), "10 frames forward"),
+            KeyFunction("ctrl+left", partial(self._pause_and_change_current_frame, -10), "10 frames back"),
+            KeyFunction("ctrl+shift+right", partial(self._pause_and_change_current_frame, 50), "50 frames forward"),
+            KeyFunction("ctrl+shift+left", partial(self._pause_and_change_current_frame, -50), "50 frames back"),
             KeyFunction("+", partial(self._change_frame_resize_factor, 0.1), "Increase frame size"),
             KeyFunction("ctrl+=", partial(self._change_frame_resize_factor, 0.1), ""),
             KeyFunction("shift++", partial(self._change_frame_resize_factor, 0.1), ""),
