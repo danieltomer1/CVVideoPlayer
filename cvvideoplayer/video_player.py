@@ -1,6 +1,7 @@
 import platform
 import time
-from typing import Optional, List
+from pathlib import Path
+from typing import Optional, List, Union
 from functools import partial
 
 import cv2
@@ -9,42 +10,41 @@ import numpy as np
 from .input_manager import InputManager, SupportedOS
 from .frame_editors import BaseFrameEditCallback
 from .frame_reader import FrameReader
-from .recorder import Recorder
+from .recorder import AbstractRecorder
 from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
     KeyFunction,
     is_window_closed_by_mouse_click,
     get_screen_size,
-    get_in_focus_window_id,
+    get_in_focus_window_id, get_frame_reader, get_recorder,
 )
 
 
 class VideoPlayer:
     def __init__(
         self,
-        video_name: str,
-        frame_reader: FrameReader,
+        video_source: Union[str, Path, FrameReader],
         start_from_frame: int = 0,
-        frame_edit_callbacks: List[BaseFrameEditCallback] = None,
-        recorder: Optional[Recorder] = None,
+        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+        record: Union[bool, AbstractRecorder] = False,
     ):
-        self._video_name = video_name
-        self._frame_reader = frame_reader
-        self._recorder = recorder
 
-        self._last_frame = len(frame_reader) - 1
+        self.frame_reader = get_frame_reader(video_source)
+        self._recorder = get_recorder(record)
+        self._last_frame = len(self.frame_reader) - 1
         self._current_frame_num = start_from_frame - 1
         self._current_system = SupportedOS(platform.system())
         self._screen_size = get_screen_size(self._current_system)
 
         self._current_frame = None
-        self._frame_edit_callbacks: List[BaseFrameEditCallback] = frame_edit_callbacks
+        self._frame_edit_callbacks = frame_edit_callbacks
 
         self._play = False
 
         self._resize_factor = 1.0
         self._play_speed = 1
         self._exit = False
+        self._window_name = "CVvideoPlayer"
         self._add_default_key_functions()
 
     def __enter__(self):
@@ -65,7 +65,7 @@ class VideoPlayer:
 
             key = InputManager().get_input()
 
-            if is_window_closed_by_mouse_click(window_name=self._video_name):
+            if is_window_closed_by_mouse_click(window_name=self._window_name):
                 cv2.destroyAllWindows()
                 break
             if key == "mouse_click":
@@ -122,7 +122,7 @@ class VideoPlayer:
 
         if self._recorder is not None:
             self._recorder.write_frame_to_video(frame)
-        cv2.imshow(winname=self._video_name, mat=frame)
+        cv2.imshow(winname=self._window_name, mat=frame)
         cv2.waitKey(10)
         cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
 
@@ -149,7 +149,7 @@ class VideoPlayer:
             return
 
         self._current_frame_num = max(0, min(self._current_frame_num + change_by, self._last_frame))
-        self._current_frame = self._frame_reader.get_frame(self._current_frame_num)
+        self._current_frame = self.frame_reader.get_frame(self._current_frame_num)
 
     def _change_frame_resize_factor(self, change_by: float) -> None:
         self._resize_factor = max(0.1, min(1.0, self._resize_factor + change_by))

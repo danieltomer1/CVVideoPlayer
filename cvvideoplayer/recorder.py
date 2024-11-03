@@ -1,10 +1,26 @@
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple
 
 import cv2
+import numpy as np
 
 
-class Recorder:
+class AbstractRecorder(ABC):
+
+    @abstractmethod
+    def write_frame_to_video(self, frame: np.ndarray) -> None:
+        """
+        method that receives a frame and writes in to a file
+        """
+    @abstractmethod
+    def teardown(self) -> None:
+        """
+        what to do on closing of the player
+        """
+
+
+class SimpleRecorder(AbstractRecorder):
     """
     In charge of recording what ever the video player is playing. The output video will be saved in
     output_video_path
