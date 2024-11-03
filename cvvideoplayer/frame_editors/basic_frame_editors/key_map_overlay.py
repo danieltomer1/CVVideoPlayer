@@ -1,27 +1,27 @@
-from typing import Dict, Tuple
+from typing import Tuple
 
 import numpy as np
 
-from cvvideoplayer.utils.video_player_utils import KeyFunction, write_text_on_img
-from ..base_frame_editor import BaseFrameEditor
+from ...utils.video_player_utils import KeyFunction
+from ...utils.drawing_utils import write_text_on_img
+from ..base_frame_edit_callback import BaseFrameEditCallback
 from ...input_manager import InputManager
 
 
-class KeyMapOverlay(BaseFrameEditor):
+class KeyMapOverlay(BaseFrameEditCallback):
     def __init__(
         self,
         enable_by_default: bool = True,
-        video_total_frame_num=None,
         font_scale: float = 1,
         font_thickness: int = 1,
-        top_left_coordinate: Tuple[int, int] = (70, 10),
+        font_color: Tuple[int, int, int] = (255, 255, 125),
+        top_left_coordinate: Tuple[int, int] = (90, 10),
     ):
         super().__init__(enable_by_default)
-        self._video_total_frame_num = video_total_frame_num
         self._font_scale = font_scale
         self._font_thickness = font_thickness
+        self._font_color = font_color
         self._tl_coordinate = top_left_coordinate
-        self._key_map: Dict[str:KeyFunction] = {}
 
     @property
     def key_function_to_register(self):
@@ -29,26 +29,39 @@ class KeyMapOverlay(BaseFrameEditor):
             KeyFunction(key="ctrl+k", func=self.enable_disable, description="Show/Hide key map"),
         ]
 
-    def setup(self, _) -> None:
-        self._key_map = InputManager().clone_keymap()
-
-    def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(self, video_player, frame: np.ndarray, frame_num: int) -> np.ndarray:
         row = self._tl_coordinate[0]
-        for key, key_function in self._key_map.items():
-            if not key_function.description:
-                continue
+        write_text_on_img(
+            frame,
+            "Available keyboard shortcuts (hide with ctrl+k):",
+            row=row,
+            col=self._tl_coordinate[1],
+            font_scale=self._font_scale * 1.2,
+            thickness=self._font_thickness + 1,
+            color=self._font_color
+        )
+        row += int(30 * self._font_scale)
+        for callback_name, keys in InputManager().get_keymap_description().items():
             write_text_on_img(
                 frame,
-                f"{key:20.20}{key_function.description:60.60}",
+                f"{callback_name}:",
                 row=row,
                 col=self._tl_coordinate[1],
                 font_scale=self._font_scale,
-                thickness=self._font_thickness,
+                thickness=self._font_thickness + 1,
+                color=self._font_color
             )
             row += int(20 * self._font_scale)
-
+            for key in keys:
+                write_text_on_img(
+                    frame,
+                    key,
+                    row=row,
+                    col=self._tl_coordinate[1],
+                    font_scale=self._font_scale,
+                    thickness=self._font_thickness,
+                    color=self._font_color
+                )
+                row += int(20 * self._font_scale)
+            row += int(10 * self._font_scale)
         return frame
-
-    @property
-    def edit_after_resize(self) -> bool:
-        return True

@@ -3,6 +3,7 @@ import dataclasses
 import subprocess
 from ctypes import wintypes
 from enum import Enum
+from pathlib import Path
 from typing import Callable
 
 import Xlib
@@ -10,6 +11,8 @@ import cv2
 import numpy as np
 from pynput import keyboard
 
+from ..frame_reader import LocalVideoFileReader, LocalDirReader, FrameReader
+from ..recorder import AbstractRecorder, SimpleRecorder
 
 MODIFIERS = {
     keyboard.Key.ctrl,
@@ -36,16 +39,32 @@ class KeyFunction:
     description: str
 
 
-def write_text_on_img(img, text, col=10, row=10, font_scale=1.5, color=(255, 255, 255), thickness=2, spacing=30):
-    """
-    Wrapper for cv2's putText with defaults and meaningful arg names
-    """
-    fontface = cv2.FONT_HERSHEY_PLAIN
-    (_, height), baseline = cv2.getTextSize(text, fontface, font_scale, thickness)
-    baseline += thickness
+def get_frame_reader(video_source):
+    if isinstance(video_source, (str, Path)):
+        path = Path(video_source)
+        if path.is_file():
+            frame_reader = LocalVideoFileReader(video_source)
+        elif path.is_dir():
+            frame_reader = LocalDirReader
+        else:
+            raise IOError(f"{video_source} not found")
+    elif isinstance(video_source, FrameReader):
+        frame_reader = video_source
+    else:
+        raise ValueError("video_source can needs to be one of {path to a video file, path to frame folder,"
+                         " an object of a class that implements FrameReader}")
+    return frame_reader
 
-    cv2.putText(img, text, (col, row + height + baseline), fontface, font_scale, color, thickness)
-    return row + spacing
+
+def get_recorder(record):
+    if isinstance(record, AbstractRecorder):
+        recorder = record
+    elif isinstance(record, bool):
+        recorder = SimpleRecorder() if record else None
+    else:
+        raise ValueError("record can needs to be one of {True, False,"
+                         " an object of a class that implements AbstractRecorder}")
+    return recorder
 
 
 def get_foreground_window_pid():

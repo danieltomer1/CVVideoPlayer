@@ -1,10 +1,10 @@
 import numpy as np
 
-from ..base_frame_editor import BaseFrameEditor
+from ..base_frame_edit_callback import BaseFrameEditCallback
 from ...utils.video_player_utils import hist_eq_uint16, KeyFunction
 
 
-class HistogramEqualizer(BaseFrameEditor):
+class HistogramEqualizer(BaseFrameEditCallback):
     def __init__(self, enable_by_default: bool = False):
         super().__init__(enable_by_default)
 
@@ -12,13 +12,13 @@ class HistogramEqualizer(BaseFrameEditor):
     def key_function_to_register(self):
         return [
             KeyFunction(
-                key="ctrl+alt+h",
+                key="ctrl+h",
                 func=self.enable_disable,
                 description="Enable/Disable histogram equalization",
             ),
         ]
 
-    def _edit_frame(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(self, video_player,  frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":
             norm_factor = 255
         elif frame.dtype == "uint16":
@@ -33,6 +33,3 @@ class HistogramEqualizer(BaseFrameEditor):
         frame = (hist_eq_uint16(frame) / 255).astype("uint8")
         return frame
 
-    @property
-    def edit_after_resize(self) -> bool:
-        return False
