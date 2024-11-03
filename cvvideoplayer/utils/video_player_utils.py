@@ -51,8 +51,10 @@ def get_frame_reader(video_source):
     elif isinstance(video_source, FrameReader):
         frame_reader = video_source
     else:
-        raise ValueError("video_source can needs to be one of {path to a video file, path to frame folder,"
-                         " an object of a class that implements FrameReader}")
+        raise ValueError(
+            "video_source can needs to be one of {path to a video file, path to frame folder,"
+            " an object of a class that implements FrameReader}"
+        )
     return frame_reader
 
 
@@ -62,8 +64,9 @@ def get_recorder(record):
     elif isinstance(record, bool):
         recorder = SimpleRecorder() if record else None
     else:
-        raise ValueError("record can needs to be one of {True, False,"
-                         " an object of a class that implements AbstractRecorder}")
+        raise ValueError(
+            "record can needs to be one of {True, False," " an object of a class that implements AbstractRecorder}"
+        )
     return recorder
 
 

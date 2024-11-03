@@ -55,4 +55,3 @@ class FrameInfoOverlay(BaseFrameEditCallback):
             thickness=self._font_thickness,
         )
         return frame
-

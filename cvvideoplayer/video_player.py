@@ -16,7 +16,9 @@ from .utils.video_player_utils import (
     KeyFunction,
     is_window_closed_by_mouse_click,
     get_screen_size,
-    get_in_focus_window_id, get_frame_reader, get_recorder,
+    get_in_focus_window_id,
+    get_frame_reader,
+    get_recorder,
 )
 
 
@@ -80,8 +82,9 @@ class VideoPlayer:
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
-            assert isinstance(callback, BaseFrameEditCallback), ("frame_editor must be a derived class of"
-                                                                 " BaseFrameEditor")
+            assert isinstance(callback, BaseFrameEditCallback), (
+                "frame_editor must be a derived class of" " BaseFrameEditor"
+            )
             for key_function in callback.key_function_to_register:
                 assert isinstance(key_function, KeyFunction), (
                     f"{callback.__class__.__name__} is trying to register a key function"
@@ -107,9 +110,7 @@ class VideoPlayer:
                 continue
             shape_before_edit = frame.shape[:2]
             frame = callback.before_frame_resize(self, frame, self._current_frame_num)
-            assert (
-                frame.shape[:2] == shape_before_edit
-            ), "callbacks can not alter the frame's shape before resize"
+            assert frame.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
 
         frame = self._resize_frame(frame)
 

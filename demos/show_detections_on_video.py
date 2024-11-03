@@ -1,5 +1,6 @@
 from pathlib import Path
 from demo_utils import add_project_root_to_path, change_cwd_to_demos_dir
+
 add_project_root_to_path()
 change_cwd_to_demos_dir()
 
@@ -14,7 +15,7 @@ def run_player():
         frame_edit_callbacks=[
             DetectionsCsvPlotter(detections_csv_path=Path("../assets/example_video_detections.csv")),
             KeyMapOverlay(),
-        ]
+        ],
     )
 
     with video_player:

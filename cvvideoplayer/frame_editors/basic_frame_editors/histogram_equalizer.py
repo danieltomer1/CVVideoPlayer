@@ -18,7 +18,7 @@ class HistogramEqualizer(BaseFrameEditCallback):
             ),
         ]
 
-    def before_frame_resize(self, video_player,  frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(self, video_player, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":
             norm_factor = 255
         elif frame.dtype == "uint16":
@@ -32,4 +32,3 @@ class HistogramEqualizer(BaseFrameEditCallback):
         frame = (frame * (2**16 - 1)).astype("uint16")
         frame = (hist_eq_uint16(frame) / 255).astype("uint8")
         return frame
-

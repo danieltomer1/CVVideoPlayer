@@ -38,7 +38,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
             col=self._tl_coordinate[1],
             font_scale=self._font_scale * 1.2,
             thickness=self._font_thickness + 1,
-            color=self._font_color
+            color=self._font_color,
         )
         row += int(30 * self._font_scale)
         for callback_name, keys in InputManager().get_keymap_description().items():
@@ -49,7 +49,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
                 col=self._tl_coordinate[1],
                 font_scale=self._font_scale,
                 thickness=self._font_thickness + 1,
-                color=self._font_color
+                color=self._font_color,
             )
             row += int(20 * self._font_scale)
             for key in keys:
@@ -60,7 +60,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
                     col=self._tl_coordinate[1],
                     font_scale=self._font_scale,
                     thickness=self._font_thickness,
-                    color=self._font_color
+                    color=self._font_color,
                 )
                 row += int(20 * self._font_scale)
             row += int(10 * self._font_scale)

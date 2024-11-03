@@ -1,4 +1,5 @@
 from demo_utils import change_cwd_to_demos_dir, add_project_root_to_path
+
 change_cwd_to_demos_dir()
 add_project_root_to_path()
 
@@ -16,7 +17,7 @@ def run_player():
             HistogramEqualizer(),
             FrameInfoOverlay(),
             KeyMapOverlay(),
-        ]
+        ],
     )
 
     with video_player:

@@ -13,6 +13,7 @@ class AbstractRecorder(ABC):
         """
         method that receives a frame and writes in to a file
         """
+
     @abstractmethod
     def teardown(self) -> None:
         """

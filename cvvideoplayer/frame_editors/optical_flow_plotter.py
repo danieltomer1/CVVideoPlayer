@@ -13,7 +13,7 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
             self,
             enable_by_default: bool,
             min_arrow_size_to_draw: float = 10.0,
-            draw_every_n_arrow: int = 80
+            draw_every_n_arrow: int = 80,
     ):
         super().__init__(enable_by_default)
         self._min_arrow_size_to_draw = min_arrow_size_to_draw
@@ -39,14 +39,12 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
 
     @property
     def key_function_to_register(self) -> List[KeyFunction]:
-        return [
-            KeyFunction("o", func=self.enable_disable, description="show optical flow")
-        ]
+        return [KeyFunction("o", func=self.enable_disable, description="show optical flow")]
 
     def _put_optical_flow_arrows_on_frame(self, frame, optical_flow_image):
         # Turn grayscale to rgb if needed
         if len(frame.shape) == 2:
-            frame = np.stack((frame,)*3, axis=2)
+            frame = np.stack((frame,) * 3, axis=2)
 
         # Get start and end coordinates of the optical flow
         flow_start = np.stack(np.meshgrid(range(optical_flow_image.shape[1]), range(optical_flow_image.shape[0])), 2)
@@ -62,11 +60,12 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
             y, x = nz[0][i], nz[1][i]
             cv2.arrowedLine(
                 frame,
-                pt1=tuple(flow_start[y,x]),
-                pt2=tuple(flow_end[y,x]),
+                pt1=tuple(flow_start[y, x]),
+                pt2=tuple(flow_end[y, x]),
                 color=(0, 255, 0),
                 thickness=1,
-                tipLength=.2)
+                tipLength=0.2,
+            )
 
         return frame
 
@@ -82,7 +81,7 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
             iterations=5,
             poly_n=5,
             poly_sigma=1.1,
-            flags=0
+            flags=0,
         )
 
         return flow

@@ -42,7 +42,7 @@ class BaseFrameEditCallback:
         """
         return frame
 
-    def after_frame_resize(self,  video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(self, video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
         """
         This function receives the frame after it has been resized to fit the screen size and should return the frame
         after it has been altered in any way desirable by the user
