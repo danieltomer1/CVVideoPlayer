@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 
 from . import BaseFrameEditCallback
-from .. import FrameReader
 from ..utils.video_player_utils import KeyFunction
 
 
@@ -13,12 +12,10 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def __init__(
             self,
             enable_by_default: bool,
-            frame_reader: FrameReader,
-            min_arrow_size_to_draw: float= 10.0,
+            min_arrow_size_to_draw: float = 10.0,
             draw_every_n_arrow: int = 80
     ):
         super().__init__(enable_by_default)
-        self._frame_reader = frame_reader
         self._min_arrow_size_to_draw = min_arrow_size_to_draw
         self._draw_every_n_arrow = draw_every_n_arrow
 
@@ -26,28 +23,15 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def enabled(self):
         return self._enabled
 
-    def before_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(self, video_player, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame_num == 0:
             return frame
 
-        prev_frame = self._frame_reader.get_frame(frame_num - 1)
+        prev_frame = video_player.frame_reader.get_frame(frame_num - 1)
         gray_frame, prev_gray_frame = self._convert_frames_to_gray(frame, prev_frame)
         flow = self._calc_optical_flow(gray_frame, prev_gray_frame)
         frame = self._put_optical_flow_arrows_on_frame(frame, optical_flow_image=flow)
 
-        return frame
-
-    def after_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
-        """
-        This function receives the frame after it has been resized to fit the screen size and should return the frame
-        after it has been altered in any way desirable by the user
-
-        Args:
-            frame (): the input frame
-            frame_num ():
-
-        Returns: the edited frame
-        """
         return frame
 
     def enable_disable(self):

@@ -89,7 +89,7 @@ class VideoPlayer:
                 )
                 InputManager().register_key_function(key_function, callback.__class__.__name__)
 
-            callback.setup(self._current_frame)
+            callback.setup(self, self._current_frame)
 
     def _setup(self) -> None:
         self._change_current_frame(change_by=1)
@@ -106,7 +106,7 @@ class VideoPlayer:
             if not callback.enabled:
                 continue
             shape_before_edit = frame.shape[:2]
-            frame = callback.before_frame_resize(frame, self._current_frame_num)
+            frame = callback.before_frame_resize(self, frame, self._current_frame_num)
             assert (
                 frame.shape[:2] == shape_before_edit
             ), "callbacks can not alter the frame's shape before resize"
@@ -116,7 +116,7 @@ class VideoPlayer:
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            frame = callback.after_frame_resize(frame, self._current_frame_num)
+            frame = callback.after_frame_resize(self, frame, self._current_frame_num)
 
         frame = self._resize_frame(frame)
 

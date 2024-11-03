@@ -1,8 +1,11 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 
 import numpy as np
 
 from ..utils.video_player_utils import KeyFunction
+
+if TYPE_CHECKING:
+    from .. import VideoPlayer
 
 
 class BaseFrameEditCallback:
@@ -14,7 +17,7 @@ class BaseFrameEditCallback:
     def enabled(self):
         return self._enabled
 
-    def setup(self, frame) -> None:
+    def setup(self, video_player: "VideoPlayer", frame) -> None:
         """
         Optionally configure more parameters according to the first incoming frame
         """
@@ -24,13 +27,14 @@ class BaseFrameEditCallback:
         Optionally define how the editor should close when video player is closed
         """
 
-    def before_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(self, video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
         """
         This function receives the frame before it has been resized and should return the frame
         after it has been altered in any way desirable by the user. In this hook you ere not allowed to change the
         frame's size.
 
         Args:
+            video_player: an instance fo VideoPlayer
             frame (): the input frame
             frame_num ():
 
@@ -38,12 +42,13 @@ class BaseFrameEditCallback:
         """
         return frame
 
-    def after_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(self,  video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
         """
         This function receives the frame after it has been resized to fit the screen size and should return the frame
         after it has been altered in any way desirable by the user
 
         Args:
+            video_player: an instance fo VideoPlayer
             frame (): the input frame
             frame_num ():
 

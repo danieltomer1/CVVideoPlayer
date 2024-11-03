@@ -49,7 +49,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             KeyFunction(key="ctrl+u", func=lambda: self._change_font_size(-0.1), description="decrease label size"),
         ]
 
-    def before_frame_resize(self, frame, frame_num):
+    def before_frame_resize(self, video_player, frame, frame_num):
         for bbox in self.get_bboxes(frame, frame_num):
             draw_rectangle(
                 frame,

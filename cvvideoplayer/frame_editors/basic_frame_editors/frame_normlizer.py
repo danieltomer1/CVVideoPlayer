@@ -1,6 +1,5 @@
 from typing import Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ..base_frame_edit_callback import BaseFrameEditCallback
@@ -17,23 +16,14 @@ class FrameNormalizer(BaseFrameEditCallback):
         super().__init__(enable_by_default)
         self._range_min = range_min
         self._range_max = range_max
-        self._current_frame = None
-
-    def setup(self, frame) -> None:
-        self._current_frame = self.before_frame_resize(frame, frame_num=0)
-
-    def _set_dynamic_range(self):
-        self._range_min = input("Set new image min: ")
-        self._range_max = input("Set new image max: ")
 
     @property
     def key_function_to_register(self):
         return [
-            KeyFunction(key="ctrl+r", func=self._set_dynamic_range, description="Set dynamic range"),
-            KeyFunction(key="ctrl+alt+r", func=self._show_frame_histogram, description="Show frame histogram"),
+            KeyFunction(key="r", func=self._set_dynamic_range, description="Set dynamic range"),
         ]
 
-    def before_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(self, video_player, frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":
             if self._range_min == self._range_max == "":
                 self._current_frame = frame
@@ -55,9 +45,8 @@ class FrameNormalizer(BaseFrameEditCallback):
         frame = (frame - norm_min) / (norm_max - norm_min)
         frame = np.clip(frame, 0, 1)
         frame = (frame * 255).astype("uint8")
-        self._current_frame = frame
         return frame
 
-    def _show_frame_histogram(self):
-        plt.hist(self._current_frame.ravel(), 256, (0, 256))
-        plt.show()
+    def _set_dynamic_range(self):
+        self._range_min = input("Set new image min: ")
+        self._range_max = input("Set new image max: ")

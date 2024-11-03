@@ -12,13 +12,13 @@ class HistogramEqualizer(BaseFrameEditCallback):
     def key_function_to_register(self):
         return [
             KeyFunction(
-                key="ctrl+alt+h",
+                key="ctrl+h",
                 func=self.enable_disable,
                 description="Enable/Disable histogram equalization",
             ),
         ]
 
-    def before_frame_resize(self, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(self, video_player,  frame: np.ndarray, frame_num: int) -> np.ndarray:
         if frame.dtype == "uint8":
             norm_factor = 255
         elif frame.dtype == "uint16":
