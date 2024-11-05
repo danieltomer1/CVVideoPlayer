@@ -30,7 +30,16 @@ class VideoPlayer:
         frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
         record: Union[bool, AbstractRecorder] = False,
     ):
-
+        """
+        Params:
+        - video_source : Union[str, Path, FrameReader] The source of the video to be played. It can be a file path, a
+         directory path, or a FrameReader instance.
+        - start_from_frame : int, optional The frame number to start the video from (default is 0).
+        - frame_edit_callbacks : list, optional A list of frame editing callbacks (default is None).
+         Each callback must be an instance of BaseFrameEditCallback.
+        - record : Union[bool, AbstractRecorder], optional Whether to record the video or not (default is False).
+        It can also be an instance of AbstractRecorder for custom recording functionality.
+        """
         self.frame_reader = get_frame_reader(video_source)
         self._recorder = get_recorder(record)
         self._last_frame = len(self.frame_reader) - 1
@@ -52,33 +61,33 @@ class VideoPlayer:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *args):
+        cv2.destroyAllWindows()
         if self._recorder is not None:
             self._recorder.teardown()
         for callback in self._frame_edit_callbacks:
             callback.teardown()
+        InputManager().stop()
 
     def run(self) -> None:
-        self._setup()
+        try:
+            self._setup()
+            InputManager().start()
+            self._run_player_loop()
+        finally:
+            self.__exit__()
 
-        InputManager().start()
-
+    def _run_player_loop(self):
         while not self._exit:
-
             key = InputManager().get_input()
-
             if is_window_closed_by_mouse_click(window_name=self._window_name):
-                cv2.destroyAllWindows()
+                cv2.waitKey(5)
                 break
-            if key == "mouse_click":
-                cv2.waitKey(30)
             elif get_in_focus_window_id(self._current_system) != self._window_id:
                 continue
             else:
                 InputManager().handle_key_str(key)
                 self._play_continuously() if self._play else self._show_current_frame()
-
-        cv2.destroyAllWindows()
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
@@ -180,7 +189,7 @@ class VideoPlayer:
         self._play = True
         self._play_continuously()
 
-    def _on_exit(self) -> None:
+    def _set_exit_to_true(self):
         self._exit = True
 
     def _add_default_key_functions(self) -> None:
@@ -197,7 +206,7 @@ class VideoPlayer:
             KeyFunction("shift++", partial(self._change_frame_resize_factor, 0.1), ""),
             KeyFunction("=", partial(self._change_frame_resize_factor, 0.1), ""),
             KeyFunction("-", partial(self._change_frame_resize_factor, -0.1), "Decrease frame size"),
-            KeyFunction("esc", self._on_exit, "Exit gracefully"),
+            KeyFunction("esc", self._set_exit_to_true, "Exit gracefully"),
         ]
 
         for key_function in default_key_functions:

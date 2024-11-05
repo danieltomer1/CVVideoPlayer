@@ -20,8 +20,7 @@ def run_player():
         ],
     )
 
-    with video_player:
-        video_player.run()
+    video_player.run()
 
 
 if __name__ == "__main__":

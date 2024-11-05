@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import *
+import typing as t
 
 
 @dataclass
@@ -8,9 +8,9 @@ class Bbox:
     y1: int
     width: int
     height: int
-    color: Optional[Tuple[int, int, int]] = None
-    above_label: Optional[str] = None
-    below_label: Optional[str] = None
+    color: t.Optional[t.Tuple[int, int, int]] = None
+    above_label: t.Optional[str] = None
+    below_label: t.Optional[str] = None
 
     @classmethod
     def init_with_xyxy(cls, x1, y1, x2, y2, color=None, above_label=None, below_label=None):

@@ -36,6 +36,7 @@ class InputManager(metaclass=Singleton):
         self._map_vk_code = make_vk_code_mapper(self._current_system)
         self._listeners = []
         self._keymap_description: Dict[str, list] = defaultdict(list)
+        self._mouse_click_str = "mouse_click"
 
     def register_key_function(self, key_function: KeyFunction, callback_name: str) -> None:
         key = key_function.key
@@ -75,6 +76,8 @@ class InputManager(metaclass=Singleton):
         return key
 
     def handle_key_str(self, key_str: str) -> None:
+        if key_str == self._mouse_click_str:
+            return 
         key_without_modifiers = key_str.split("+")[-1]
         if key_without_modifiers.isnumeric():
             general_num_key = key_str.replace(key_without_modifiers, "num")
@@ -107,7 +110,7 @@ class InputManager(metaclass=Singleton):
 
     def _add_mouse_click_to_queue(self, *_) -> None:
         if not self.has_input():
-            self._add_key_press_to_queue("mouse_click")
+            self._ui_queue.put(self._mouse_click_str)
 
     def _add_key_press_to_queue(self, key: Union[keyboard.Key, str]) -> None:
         if key in MODIFIERS:
