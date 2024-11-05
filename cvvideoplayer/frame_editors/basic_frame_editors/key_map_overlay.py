@@ -5,7 +5,6 @@ import numpy as np
 from ...utils.video_player_utils import KeyFunction
 from ...utils.drawing_utils import write_text_on_img
 from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...input_manager import InputManager
 
 
 class KeyMapOverlay(BaseFrameEditCallback):
@@ -41,7 +40,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
             color=self._font_color,
         )
         row += int(30 * self._font_scale)
-        for callback_name, keys in InputManager().get_keymap_description().items():
+        for callback_name, keys in video_player.input_handler.get_keymap_description().items():
             write_text_on_img(
                 frame,
                 f"{callback_name}:",
