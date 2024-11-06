@@ -100,3 +100,5 @@ error_log.txt
 /configs/choose_video_gui_configs/videos_dict.json
 /configs/choose_video_gui_configs/gui_default.json
 /video_player_defaults/color_per_gt_label.json
+tests/expected_images
+.vscode/launch.json
