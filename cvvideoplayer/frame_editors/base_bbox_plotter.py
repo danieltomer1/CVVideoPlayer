@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import *
+import typing as t
 
-from cvvideoplayer.frame_editors import BaseFrameEditCallback
-from cvvideoplayer.utils.bbox_utils import Bbox
-from cvvideoplayer.utils.drawing_utils import draw_rectangle, draw_label
-from cvvideoplayer.utils.video_player_utils import KeyFunction
+from ..frame_editors import BaseFrameEditCallback
+from ..utils.bbox_utils import Bbox
+from ..utils.drawing_utils import draw_rectangle, draw_label
+from ..utils.video_player_utils import KeyFunction
 
 
 class BaseBboxPlotter(BaseFrameEditCallback, ABC):
@@ -18,12 +18,12 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         enable_by_default: bool = False,
         show_above_bbox_label: bool = True,
         show_below_bbox_label: bool = True,
-        default_bbox_color: Tuple[int, int, int] = (255, 0, 0),
-        text_color: Tuple[int, int, int] = (255, 255, 255),
+        default_bbox_color: t.Tuple[int, int, int] = (255, 0, 0),
+        text_color: t.Tuple[int, int, int] = (255, 255, 255),
         drawing_thickness: int = 1,
         font_scale: float = 0.5,
-        label_text_color: Tuple[int, int, int] = (255, 255, 255),
-        label_filling_color: Tuple[int, int, int] = (0, 0, 0),
+        label_text_color: t.Tuple[int, int, int] = (255, 255, 255),
+        label_filling_color: t.Tuple[int, int, int] = (0, 0, 0),
     ):
         super().__init__(enable_by_default)
         self._text_color = text_color
@@ -36,7 +36,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         self._label_filling_color = label_filling_color
 
     @abstractmethod
-    def get_bboxes(self, frame, frame_num) -> List[Bbox]:
+    def get_bboxes(self, frame, frame_num) -> t.List[Bbox]:
         pass
 
     @property

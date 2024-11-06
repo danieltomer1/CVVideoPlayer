@@ -1,10 +1,10 @@
 import csv
 from collections import defaultdict
 from pathlib import Path
-from typing import *
+import typing as t
 
-from cvvideoplayer.frame_editors import BaseBboxPlotter
-from cvvideoplayer.utils.bbox_utils import Bbox
+from ..frame_editors import BaseBboxPlotter
+from ..utils.bbox_utils import Bbox
 
 
 class DetectionsCsvPlotter(BaseBboxPlotter):
@@ -35,5 +35,5 @@ class DetectionsCsvPlotter(BaseBboxPlotter):
                 )
                 self._detections[int(row["frame_id"])].append(bbox)
 
-    def get_bboxes(self, frame, frame_num) -> List[Bbox]:
+    def get_bboxes(self, frame, frame_num) -> t.List[Bbox]:
         return self._detections[frame_num]

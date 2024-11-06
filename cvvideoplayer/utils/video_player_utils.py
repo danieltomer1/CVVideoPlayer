@@ -9,22 +9,8 @@ from typing import Callable
 import Xlib
 import cv2
 import numpy as np
-from pynput import keyboard
-
 from ..frame_reader import LocalVideoFileReader, LocalDirReader, FrameReader
 from ..recorder import AbstractRecorder, SimpleRecorder
-
-MODIFIERS = {
-    keyboard.Key.ctrl,
-    keyboard.Key.ctrl_r,
-    keyboard.Key.ctrl_l,
-    keyboard.Key.alt,
-    keyboard.Key.alt_r,
-    keyboard.Key.alt_l,
-    keyboard.Key.shift,
-    keyboard.Key.shift_r,
-    keyboard.Key.shift_l,
-}
 
 
 class SupportedOS(Enum):
