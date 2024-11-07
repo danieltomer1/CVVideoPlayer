@@ -132,7 +132,7 @@ class VideoPlayer:
         frame = self._resize_frame(frame)
 
         if self._recorder is not None:
-            self._recorder.write_frame_to_video(frame)
+            self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
         cv2.imshow(winname=self._window_name, mat=frame)
         cv2.waitKey(10)
         cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
