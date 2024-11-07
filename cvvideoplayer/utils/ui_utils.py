@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Tuple
+from typing import Tuple, Union
 
 from pynput.mouse import Button
 
@@ -50,5 +50,5 @@ class InputType(Enum):
 @dataclass
 class SingleInput:
     input_type: InputType
-    input_data: Tuple
+    input_data: Union[Tuple, str]
 

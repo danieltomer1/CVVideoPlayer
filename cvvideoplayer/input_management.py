@@ -76,7 +76,7 @@ class InputParser(metaclass=Singleton):
         else:
             key_str = "+".join(sorted(self._modifiers) + [key_str])
             if self._queue_is_open_for_business():  # To avoid a situation of execution build up due to slow execution time
-                self._ui_queue.put(SingleInput(InputType.KeyPress, (key_str,)))
+                self._ui_queue.put(SingleInput(InputType.KeyPress, key_str))
 
     def _add_key_release_to_queue(self, key: Union[keyboard.Key, str]) -> None:
         key_str = self._parse_pynput_key(key)
@@ -135,7 +135,7 @@ class InputHandler:
 
     def handle_input(self, single_input: SingleInput) -> None:
         if single_input.input_type == InputType.KeyPress:
-            key_str = single_input.input_data[0]
+            key_str = single_input.input_data
             key_without_modifiers = key_str.split("+")[-1]
             if key_without_modifiers.isnumeric():
                 general_num_key = key_str.replace(key_without_modifiers, "num")

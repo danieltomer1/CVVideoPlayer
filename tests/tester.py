@@ -43,7 +43,7 @@ def create_video_player_for_snapshot(
 def take_snapshot(video_player: VideoPlayer, key_recordings: List[str]):
     video_player._setup()
     for key in key_recordings:
-        InputParser()._ui_queue.put(SingleInput(InputType.KeyPress, (key,)))
+        InputParser()._ui_queue.put(SingleInput(InputType.KeyPress, key))
 
     video_player._run_player_loop()
     cv2.destroyAllWindows()
