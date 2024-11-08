@@ -21,6 +21,10 @@ from .utils.video_player_utils import (
     get_recorder,
 )
 
+if SupportedOS(platform.system()) == SupportedOS.WINDOWS:
+    import ctypes
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
 
 class VideoPlayer:
     def __init__(
@@ -47,13 +51,15 @@ class VideoPlayer:
         self._current_frame_num = start_from_frame - 1
         self._current_system = SupportedOS(platform.system())
         self._screen_size = get_screen_size(self._current_system)
-
+        self._screen_adjusted_frame_size = None
+        self._original_frame_size = None
         self._current_frame = None
         self._frame_edit_callbacks = frame_edit_callbacks
 
         self._play = False
 
-        self._resize_factor = 1.0
+        self._zoom_factor = 1.0
+        self._zoom_crop = None
         self._play_speed = 1
         self._exit = False
         self._window_name = "CVvideoPlayer"
@@ -107,6 +113,13 @@ class VideoPlayer:
     def _setup(self) -> None:
         self._change_current_frame(change_by=1)
         self._setup_callbacks()
+        self._screen_adjusted_frame_size = get_screen_adjusted_frame_size(
+            screen_size=self._screen_size,
+            frame_width=self._current_frame.shape[1],
+            frame_height=self._current_frame.shape[0],
+        )
+        self._original_frame_size = tuple(self._current_frame.shape[:2][::-1])
+        self._zoom_crop = (0, 0, self._original_frame_size[0], self._original_frame_size[1])
         self._show_current_frame()
         time.sleep(0.5)  # make sure video player is up before checking the window id
         self._window_id = get_in_focus_window_id(self._current_system)
@@ -122,14 +135,15 @@ class VideoPlayer:
             frame = callback.before_frame_resize(self, frame, self._current_frame_num)
             assert frame.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
 
-        frame = self._resize_frame(frame)
+        frame = self._crop_and_resize_frame(frame)
 
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
             frame = callback.after_frame_resize(self, frame, self._current_frame_num)
 
-        frame = self._resize_frame(frame)
+        #  we resize again in case frame size has been changed in "after_frame_resize" hooks
+        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
 
         if self._recorder is not None:
             self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
@@ -142,14 +156,13 @@ class VideoPlayer:
             self._change_current_frame(change_by=self._play_speed)
             self._show_current_frame()
 
-    def _resize_frame(self, frame) -> np.ndarray:
-        width, height = get_screen_adjusted_frame_size(
-            screen_size=self._screen_size,
-            frame_width=frame.shape[1],
-            frame_height=frame.shape[0],
-        )
-        frame_size = int(self._resize_factor * width), int(self._resize_factor * height)
-        return cv2.resize(frame, frame_size)
+    def _crop_and_resize_frame(self, frame) -> np.ndarray:
+        frame = frame[
+                self._zoom_crop[1]: self._zoom_crop[1] + self._zoom_crop[3],
+                self._zoom_crop[0]: self._zoom_crop[0] + self._zoom_crop[2],
+                ]
+        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
+        return frame
 
     def _change_current_frame(self, change_by: int) -> None:
         if change_by > 0 and self._current_frame_num == self._last_frame:
@@ -166,8 +179,21 @@ class VideoPlayer:
         self._play = False
         self._change_current_frame(change_by)
 
-    def _change_frame_resize_factor(self, change_by: float) -> None:
-        self._resize_factor = max(0.1, min(1.0, self._resize_factor + change_by))
+    def _set_zoom(self, curser_x: int, curser_y: int, scroll_direction: int):
+        new_zoom_factor = max(1.0, min(5.0, self._zoom_factor + 0.5 * scroll_direction))
+        if new_zoom_factor != self._zoom_factor:
+            self._zoom_factor = new_zoom_factor
+            adjusted_width, adjusted_height = self._screen_adjusted_frame_size
+            norm_curser_position = (curser_x / adjusted_width, curser_y / adjusted_height)
+            w = h = 1 / self._zoom_factor
+            x_min = norm_curser_position[0] * (1 - w)
+            y_min = norm_curser_position[1] * (1 - h)
+            self._zoom_crop = (
+                int(self._original_frame_size[0] * x_min),
+                int(self._original_frame_size[1] * y_min),
+                int(self._original_frame_size[0] * w),
+                int(self._original_frame_size[1] * h)
+            )
 
     def _play_pause(self):
         self._play = not self._play
@@ -202,12 +228,8 @@ class VideoPlayer:
             KeyFunction("ctrl+left", partial(self._pause_and_change_current_frame, -10), "10 frames back"),
             KeyFunction("ctrl+shift+right", partial(self._pause_and_change_current_frame, 50), "50 frames forward"),
             KeyFunction("ctrl+shift+left", partial(self._pause_and_change_current_frame, -50), "50 frames back"),
-            KeyFunction("+", partial(self._change_frame_resize_factor, 0.1), "Increase frame size"),
-            KeyFunction("ctrl+=", partial(self._change_frame_resize_factor, 0.1), ""),
-            KeyFunction("shift++", partial(self._change_frame_resize_factor, 0.1), ""),
-            KeyFunction("=", partial(self._change_frame_resize_factor, 0.1), ""),
-            KeyFunction("-", partial(self._change_frame_resize_factor, -0.1), "Decrease frame size"),
             KeyFunction("esc", self._set_exit_to_true, "Exit gracefully"),
+            KeyFunction("mouse_scroll", self._set_zoom, "zoom in and out"),
         ]
 
         for key_function in default_key_functions:
