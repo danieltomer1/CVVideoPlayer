@@ -76,7 +76,8 @@ class InputParser(metaclass=Singleton):
             self._modifiers.add(key_str)
         else:
             key_str = "+".join(sorted(self._modifiers) + [key_str])
-            if self._queue_is_open_for_business():  # To avoid a situation of execution build up due to slow execution time
+            # To avoid a situation of execution build up due to slow execution time
+            if self._queue_is_open_for_business():
                 self._ui_queue.put(SingleInput(InputType.KeyPress, key_str))
 
     def _add_key_release_to_queue(self, key: Union[keyboard.Key, str]) -> None:

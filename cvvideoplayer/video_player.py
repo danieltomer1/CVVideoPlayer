@@ -86,15 +86,14 @@ class VideoPlayer:
 
     def _run_player_loop(self):
         while not self._exit:
+            if get_in_focus_window_id(self._current_system) != self._window_id:
+                if is_window_closed_by_mouse_click(window_name=self._window_name):
+                    break
+                else:
+                    continue
             single_input = InputParser().get_input()
-            if is_window_closed_by_mouse_click(window_name=self._window_name):
-                cv2.waitKey(5)
-                break
-            elif get_in_focus_window_id(self._current_system) != self._window_id:
-                continue
-            else:
-                self.input_handler.handle_input(single_input)
-                self._play_continuously() if self._play else self._show_current_frame()
+            self.input_handler.handle_input(single_input)
+            self._play_continuously() if self._play else self._show_current_frame()
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
