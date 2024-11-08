@@ -1,15 +1,18 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
 
 import cv2
 import numpy as np
+
+if TYPE_CHECKING:
+    from .video_player import VideoPlayer
 
 
 class AbstractRecorder(ABC):
 
     @abstractmethod
-    def write_frame_to_video(self, frame: np.ndarray) -> None:
+    def write_frame_to_video(self, video_player: "VideoPlayer", frame: np.ndarray, frame_nun: int) -> None:
         """
         method that receives a frame and writes in to a file
         """
@@ -53,7 +56,7 @@ class SimpleRecorder(AbstractRecorder):
         )
         return video_writer
 
-    def write_frame_to_video(self, frame):
+    def write_frame_to_video(self, video_player, frame, frame_num):
         frame = cv2.resize(frame, self._output_video_shape)
         self._video_writer.write(frame)
 
