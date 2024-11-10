@@ -1,6 +1,7 @@
 import platform
 import time
 from pathlib import Path
+from queue import Empty
 from typing import Optional, List, Union
 from functools import partial
 
@@ -21,7 +22,7 @@ from .utils.video_player_utils import (
     get_recorder,
 )
 
-if SupportedOS(platform.system()) == SupportedOS.WINDOWS:
+if InputParser().get_current_os() == SupportedOS.WINDOWS:
     import ctypes
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
@@ -54,7 +55,7 @@ class VideoPlayer:
         self._screen_adjusted_frame_size = None
         self._original_frame_size = None
         self._current_frame = None
-        self._frame_edit_callbacks = frame_edit_callbacks
+        self._frame_edit_callbacks = frame_edit_callbacks or []
 
         self._play = False
 
@@ -90,8 +91,13 @@ class VideoPlayer:
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
                 else:
+                    cv2.waitKey(1)
                     continue
-            single_input = InputParser().get_input()
+            try:
+                single_input = InputParser().get_input()
+            except Empty:
+                cv2.waitKey(1)
+                continue
             self.input_handler.handle_input(single_input)
             self._play_continuously() if self._play else self._show_current_frame()
 
@@ -142,13 +148,16 @@ class VideoPlayer:
             frame = callback.after_frame_resize(self, frame, self._current_frame_num)
 
         #  we resize again in case frame size has been changed in "after_frame_resize" hooks
-        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
+        if frame.shape[0] != self._screen_adjusted_frame_size[1] or frame.shape[1] != self._screen_adjusted_frame_size[0]:
+            frame = cv2.resize(frame, self._screen_adjusted_frame_size)
 
         if self._recorder is not None:
             self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
         cv2.imshow(winname=self._window_name, mat=frame)
-        cv2.waitKey(10)
-        cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
+        cv2.waitKey(1)
+        # for some reason Windows OS requires an additional waitKey to work properly
+        if InputParser().get_current_os() == SupportedOS.WINDOWS:
+            cv2.waitKey(1)
 
     def _play_continuously(self) -> None:
         while (not InputParser().has_input()) and self._play and not self._exit:
