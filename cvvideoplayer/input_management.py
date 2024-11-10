@@ -23,15 +23,15 @@ class InputParser(metaclass=Singleton):
         self._allow_queue_buildup = allow_queue_buildup
         self._ui_queue: Queue[SingleInput] = Queue()
         self._modifiers = set()
-        self._current_system = SupportedOS(platform.system())
-        self._map_vk_code = make_vk_code_mapper(self._current_system)
+        self._current_os = SupportedOS(platform.system())
+        self._map_vk_code = make_vk_code_mapper(self._current_os)
         self._listeners = []
 
     def has_input(self) -> bool:
         return not self._ui_queue.empty()
 
     def get_input(self) -> SingleInput:
-        return self._ui_queue.get()
+        return self._ui_queue.get(timeout=0.1)
 
     def start(self) -> None:
         self._listeners.append(
@@ -51,9 +51,10 @@ class InputParser(metaclass=Singleton):
             listener.start()
 
     def stop(self) -> None:
-        for listener in self._listeners:
-            listener.stop()
         self._listeners.clear()
+
+    def get_current_os(self):
+        return self._current_os
 
     def _queue_is_open_for_business(self) -> bool:
         return not self.has_input() or self._allow_queue_buildup

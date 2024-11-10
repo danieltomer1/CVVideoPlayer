@@ -56,13 +56,16 @@ class LocalVideoFileReader(FrameReader):
         assert self._video_path.is_file()
         self._video_reader = cv2.VideoCapture(str(self._video_path))
         self._total_frames = int(self._video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._last_frame = -1
 
     def get_frame(self, frame_num):
         if frame_num >= len(self):
             return
-        self._video_reader.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+        if not frame_num == self._last_frame + 1:
+            self._video_reader.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
         ret, frame = self._video_reader.read()
         assert ret, f"frame number = {frame_num} is corrupted"
+        self._last_frame = frame_num
         return frame
 
     def __len__(self):
