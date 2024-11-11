@@ -1,16 +1,15 @@
+import abc
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Tuple, Union
 
-from pynput.mouse import Button
+from pynput import mouse
 
-from .video_player_utils import SupportedOS
-from .windows_vk_dict import VK_CODE_MAP
 
 mouse_button_parser = {
-    Button.left: "mouse_left",
-    Button.right: "mouse_right",
-    Button.middle: "mouse_middle",
+    mouse.Button.left: "mouse_left",
+    mouse.Button.right: "mouse_right",
+    mouse.Button.middle: "mouse_middle",
 }
 
 MODIFIERS = {
@@ -20,16 +19,7 @@ MODIFIERS = {
 }
 
 
-def make_vk_code_mapper(os: SupportedOS):
-    if os == SupportedOS.LINUX:
-        return chr
-    elif os == SupportedOS.WINDOWS:
-        return lambda x: VK_CODE_MAP[x]
-    else:
-        raise NotImplementedError(f"{os=} not supported")
-
-
-class Singleton(type):
+class Singleton(abc.ABCMeta):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):

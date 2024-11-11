@@ -1,14 +1,17 @@
-import platform
+import abc
+import ctypes
+import subprocess
 import time
 from pathlib import Path
 from queue import Empty
 from typing import Optional, List, Union
 from functools import partial
 
+import Xlib
 import cv2
 import numpy as np
 
-from .input_management import InputParser, SupportedOS, InputHandler
+from .input_management import InputHandler, WindowsInputParser, LinuxInputParser
 from .frame_editors import BaseFrameEditCallback
 from .frame_reader import FrameReader
 from .recorder import AbstractRecorder
@@ -16,18 +19,33 @@ from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
     KeyFunction,
     is_window_closed_by_mouse_click,
-    get_screen_size,
-    get_in_focus_window_id,
     get_frame_reader,
     get_recorder,
+    CURRENT_OS,
+    SupportedOS,
 )
 
-if InputParser().get_current_os() == SupportedOS.WINDOWS:
-    import ctypes
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
+class DeprecatedVideoPlayer:
+    def __init__(
+        self,
+        video_source: Union[str, Path, FrameReader],
+        start_from_frame: int = 0,
+        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+        record: Union[bool, AbstractRecorder] = False
+    ):
+        self.per_os_video_player = create_video_player(
+            video_source=video_source,
+            start_from_frame=start_from_frame,
+            frame_edit_callbacks=frame_edit_callbacks,
+            record=record,
+        )
+
+    def run(self) -> None:
+        self.per_os_video_player.run()
 
 
-class VideoPlayer:
+class VideoPlayer(abc.ABC):
     def __init__(
         self,
         video_source: Union[str, Path, FrameReader],
@@ -50,8 +68,7 @@ class VideoPlayer:
         self._recorder = get_recorder(record)
         self._last_frame = len(self.frame_reader) - 1
         self._current_frame_num = start_from_frame - 1
-        self._current_system = SupportedOS(platform.system())
-        self._screen_size = get_screen_size(self._current_system)
+        self._screen_size = self._get_screen_size()
         self._screen_adjusted_frame_size = None
         self._original_frame_size = None
         self._current_frame = None
@@ -75,26 +92,40 @@ class VideoPlayer:
             self._recorder.teardown()
         for callback in self._frame_edit_callbacks:
             callback.teardown()
-        InputParser().stop()
+        self._input_parser.stop()
 
     def run(self) -> None:
         try:
             self._setup()
-            InputParser().start()
+            self._input_parser.start()
             self._run_player_loop()
         finally:
             self.__exit__()
 
+    @staticmethod
+    @abc.abstractmethod
+    def _get_screen_size():
+        pass
+
+    @abc.abstractmethod
+    def _get_in_focus_window_id(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def _input_parser(self):
+        pass
+
     def _run_player_loop(self):
         while not self._exit:
-            if get_in_focus_window_id(self._current_system) != self._window_id:
+            if self._get_in_focus_window_id() != self._window_id:
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
                 else:
-                    cv2.waitKey(1)
+                    cv2.waitKey(20)
                     continue
             try:
-                single_input = InputParser().get_input()
+                single_input = self._input_parser.get_input()
             except Empty:
                 cv2.waitKey(1)
                 continue
@@ -127,7 +158,7 @@ class VideoPlayer:
         self._zoom_crop = (0, 0, self._original_frame_size[0], self._original_frame_size[1])
         self._show_current_frame()
         time.sleep(0.5)  # make sure video player is up before checking the window id
-        self._window_id = get_in_focus_window_id(self._current_system)
+        self._window_id = self._get_in_focus_window_id()
         cv2.waitKey(50)
 
     def _show_current_frame(self) -> None:
@@ -155,12 +186,9 @@ class VideoPlayer:
             self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
         cv2.imshow(winname=self._window_name, mat=frame)
         cv2.waitKey(1)
-        # for some reason Windows OS requires an additional waitKey to work properly
-        if InputParser().get_current_os() == SupportedOS.WINDOWS:
-            cv2.waitKey(1)
 
     def _play_continuously(self) -> None:
-        while (not InputParser().has_input()) and self._play and not self._exit:
+        while (not self._input_parser.has_input()) and self._play and not self._exit:
             self._change_current_frame(change_by=self._play_speed)
             self._show_current_frame()
 
@@ -242,3 +270,67 @@ class VideoPlayer:
 
         for key_function in default_key_functions:
             self.input_handler.register_key_function(key_function, "Video Control")
+
+
+class WindowsVideoPlayer(VideoPlayer):
+    def __init__(self, **video_player_kwargs):
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        super().__init__(**video_player_kwargs)
+
+    def _show_current_frame(self) -> None:
+        super()._show_current_frame()
+        cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
+
+    @property
+    def _input_parser(self):
+        return WindowsInputParser()
+
+    @staticmethod
+    def _get_screen_size():
+        user32 = ctypes.windll.user32
+        screensize = 0.9 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
+        return screensize
+
+    def _get_in_focus_window_id(self):
+        h_wnd = ctypes.windll.user32.GetForegroundWindow()
+        pid = ctypes.wintypes.DWORD()
+        ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+        return pid.value
+    pass
+
+
+class LinuxVideoPlayer(VideoPlayer):
+    def __init__(self, **video_player_kwargs):
+        super().__init__(**video_player_kwargs)
+        self._display = Xlib.display.Display()
+
+    @property
+    def _input_parser(self):
+        return LinuxInputParser()
+
+    def _get_in_focus_window_id(self):
+        window = self._display.get_input_focus().focus
+        if isinstance(window, int):
+            return ""
+        return window.id
+
+    @staticmethod
+    def _get_screen_size():
+        try:
+            screen_size_str = (
+                subprocess.check_output('xrandr | grep "\*" | cut -d" " -f4', shell=True).decode().strip().split("\n")[
+                    0]
+            )
+            screen_w, screen_h = screen_size_str.split("x")
+            screen_w = 0.9 * int(screen_w)
+            screen_h = 0.9 * int(screen_h)
+            return screen_w, screen_h
+        except (ValueError, TypeError, subprocess.CalledProcessError, IndexError):
+            return None, None
+
+
+def create_video_player(**video_kwargs) -> VideoPlayer:
+    if CURRENT_OS == SupportedOS.WINDOWS:
+        return WindowsVideoPlayer(**video_kwargs)
+    elif CURRENT_OS == SupportedOS.LINUX:
+        return LinuxVideoPlayer(**video_kwargs)

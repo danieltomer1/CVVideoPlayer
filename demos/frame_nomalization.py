@@ -3,14 +3,13 @@ from demo_utils import change_cwd_to_demos_dir, add_project_root_to_path
 change_cwd_to_demos_dir()
 add_project_root_to_path()
 
-from cvvideoplayer import LocalFrameReader, VideoPlayer
+from cvvideoplayer import create_video_player
 from cvvideoplayer.frame_editors import FrameInfoOverlay, KeyMapOverlay, FrameNormalizer, HistogramEqualizer
 
 
 def run_player():
-    frame_reader = LocalFrameReader(source_path="../assets/example_video.mp4")
-    video_player = VideoPlayer(
-        video_source=frame_reader,
+    video_player = create_video_player(
+        video_source="../assets/example_video.mp4",
         record=True,
         frame_edit_callbacks=[
             FrameNormalizer(),

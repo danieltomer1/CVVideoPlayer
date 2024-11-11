@@ -9,9 +9,8 @@ from cvvideoplayer.frame_editors.basic_frame_editors.frame_info_overlay import (
 import inspect
 from cvvideoplayer.frame_editors.basic_frame_editors.frame_snapshot import FrameSnapshot
 from cvvideoplayer.frame_editors.optical_flow_plotter import OpticalFlowPlotter
-from cvvideoplayer.input_management import InputParser
 from cvvideoplayer.utils.ui_utils import InputType, SingleInput
-from cvvideoplayer.video_player import VideoPlayer
+from cvvideoplayer.video_player import VideoPlayer, create_video_player
 import cv2
 
 
@@ -31,7 +30,7 @@ def create_video_player_for_snapshot(
     frame_num: int,
     frame_edit_callbacks: List[BaseFrameEditCallback] = None,
 ):
-    video_player = VideoPlayer(
+    video_player = create_video_player(
         video_source=Path(source_path),
         frame_edit_callbacks=frame_edit_callbacks
         + [FrameSnapshot(output_path, (300, 200), frame_num)],
@@ -43,7 +42,7 @@ def create_video_player_for_snapshot(
 def take_snapshot(video_player: VideoPlayer, key_recordings: List[str]):
     video_player._setup()
     for key in key_recordings:
-        InputParser()._ui_queue.put(SingleInput(InputType.KeyPress, key))
+        video_player._input_parser._ui_queue.put(SingleInput(InputType.KeyPress, key))
 
     video_player._run_player_loop()
     cv2.destroyAllWindows()
