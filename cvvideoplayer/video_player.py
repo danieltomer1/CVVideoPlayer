@@ -11,14 +11,12 @@ import Xlib
 import cv2
 import numpy as np
 
-from .input_management import (
-    InputHandler,
-    WindowsInputParser,
-    LinuxInputParser,
-    BaseInputParser,
-)
 from .frame_editors import BaseFrameEditCallback
 from .frame_reader import FrameReader
+from .input_management.base_input_parser import BaseInputParser
+from .input_management.input_handler import InputHandler
+from .input_management.linux_input_parser import LinuxInputParser
+from .input_management.windows_input_parser import WindowsInputParser
 from .recorder import AbstractRecorder
 from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
