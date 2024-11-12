@@ -1,7 +1,7 @@
+import abc
 from collections import defaultdict
 from typing import Dict, Union
 from queue import Queue
-import platform
 
 import cv2
 from pynput import keyboard, mouse
@@ -11,20 +11,19 @@ from .utils.ui_utils import (
     mouse_button_parser,
     Singleton,
     SingleInput,
-    make_vk_code_mapper,
     InputType,
     MODIFIERS,
 )
-from .utils.video_player_utils import KeyFunction, SupportedOS
+
+from .utils.video_player_utils import KeyFunction
+from .utils.windows_os_utils import VK_CODE_MAP
 
 
-class InputParser(metaclass=Singleton):
+class BaseInputParser(metaclass=Singleton):
     def __init__(self, allow_queue_buildup=False):
         self._allow_queue_buildup = allow_queue_buildup
         self._ui_queue: Queue[SingleInput] = Queue()
         self._modifiers = set()
-        self._current_os = SupportedOS(platform.system())
-        self._map_vk_code = make_vk_code_mapper(self._current_os)
         self._listeners = []
 
     def has_input(self) -> bool:
@@ -53,8 +52,10 @@ class InputParser(metaclass=Singleton):
     def stop(self) -> None:
         self._listeners.clear()
 
-    def get_current_os(self):
-        return self._current_os
+    @staticmethod
+    @abc.abstractmethod
+    def _vk_code_mapper(vk_code) -> str:
+        pass
 
     def _queue_is_open_for_business(self) -> bool:
         return not self.has_input() or self._allow_queue_buildup
@@ -91,7 +92,7 @@ class InputParser(metaclass=Singleton):
             key = "5"
 
         if hasattr(key, "vk") and key.vk is not None:
-            key_str = self._map_vk_code(key.vk).lower()
+            key_str = self._vk_code_mapper(key.vk).lower()
         else:
             key_str = str(key).replace("'", "")
             key_str = key_str.replace("Key.", "")
@@ -100,10 +101,23 @@ class InputParser(metaclass=Singleton):
         return key_str
 
 
+class WindowsInputParser(BaseInputParser):
+    @staticmethod
+    def _vk_code_mapper(vk_code):
+        return VK_CODE_MAP[vk_code]
+
+
+class LinuxInputParser(BaseInputParser):
+    @staticmethod
+    def _vk_code_mapper(vk_code):
+        return chr(vk_code)
+
+
 class InputHandler:
-    def __init__(self):
+    def __init__(self, window_name: str):
         self._keymap: Dict[str, KeyFunction] = {}
         self._keymap_description: Dict[str, list] = defaultdict(list)
+        self._window_name = window_name
 
     def register_key_function(self, key_function: KeyFunction, callback_name: str) -> None:
         key = key_function.key
@@ -159,7 +173,7 @@ class InputHandler:
     def _handle_mouse_scroll(self, x, y, dx, dy):
         if "mouse_scroll" not in self._keymap:
             return
-        win_x, win_y, win_w, win_h = cv2.getWindowImageRect("CVvideoPlayer")
+        win_x, win_y, win_w, win_h = cv2.getWindowImageRect(self._window_name)
         curser_x = x - win_x
         curser_y = y - win_y
         if curser_x < 0 or curser_y < 0:

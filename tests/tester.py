@@ -9,9 +9,8 @@ from cvvideoplayer.frame_editors.basic_frame_editors.frame_info_overlay import (
 import inspect
 from cvvideoplayer.frame_editors.basic_frame_editors.frame_snapshot import FrameSnapshot
 from cvvideoplayer.frame_editors.optical_flow_plotter import OpticalFlowPlotter
-from cvvideoplayer.input_management import InputParser
 from cvvideoplayer.utils.ui_utils import InputType, SingleInput
-from cvvideoplayer.video_player import VideoPlayer
+from cvvideoplayer.video_player import VideoPlayer, create_video_player
 import cv2
 
 
@@ -31,28 +30,25 @@ def create_video_player_for_snapshot(
     frame_num: int,
     frame_edit_callbacks: List[BaseFrameEditCallback] = None,
 ):
-    video_player = VideoPlayer(
+    video_player = create_video_player(
         video_source=Path(source_path),
-        frame_edit_callbacks=frame_edit_callbacks
-        + [FrameSnapshot(output_path, (300, 200), frame_num)],
+        frame_edit_callbacks=frame_edit_callbacks + [FrameSnapshot(output_path, (300, 200), frame_num)],
     )
 
     return video_player
 
 
 def take_snapshot(video_player: VideoPlayer, key_recordings: List[str]):
-    video_player._setup()
+    video_player._open_player()
     for key in key_recordings:
-        InputParser()._ui_queue.put(SingleInput(InputType.KeyPress, key))
+        video_player._input_parser._ui_queue.put(SingleInput(InputType.KeyPress, key))
 
     video_player._run_player_loop()
     cv2.destroyAllWindows()
 
 
 def compare_images(expected_path: Path, actual_path: Path, diff_path: Path):
-    assert (
-        actual_path.exists()
-    ), f"Something went wrong, the actual image was not saved at {actual_path}"
+    assert actual_path.exists(), f"Something went wrong, the actual image was not saved at {actual_path}"
     # assert that the two images are the same
     expected_frame = cv2.imread(str(expected_path))
     actual_frame = cv2.imread(str(actual_path))
@@ -234,12 +230,8 @@ if __name__ == "__main__":
         allow_abbrev=False,
     )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--record", action="store_true", default=False, help="Record expected images"
-    )
-    group.add_argument(
-        "--replay", action="store_true", default=False, help="Replay and run the tests"
-    )
+    group.add_argument("--record", action="store_true", default=False, help="Record expected images")
+    group.add_argument("--replay", action="store_true", default=False, help="Replay and run the tests")
 
     args = parser.parse_args()
 

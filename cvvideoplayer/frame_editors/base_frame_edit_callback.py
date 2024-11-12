@@ -5,7 +5,7 @@ import numpy as np
 from ..utils.video_player_utils import KeyFunction
 
 if TYPE_CHECKING:
-    from .. import VideoPlayer
+    from ..video_player import VideoPlayer
 
 
 class BaseFrameEditCallback:
