@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
 
+with open("Readme.md", 'r') as f:
+    long_description = f.read()
+
 setup(
     name="cvvideoplayer",
-    version="1.1.1",
+    version="1.1.2",
     author="Daniel Tomer",
     author_email="danieltomer1@gmail.com",
-    description="moduler multi purpose video player for python",
-    long_description=(
-        "CV video player is a Python-based customizable video player that helps"
-        " computer vision practitioners to develop, analyze and debug their video"
-        " related algorithms and model."
-    ),
+    description="moduler multi purpose video player for debugging algorithms in python",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -27,4 +27,14 @@ setup(
     project_urls={
         "Homepage": "https://github.com/danieltomer1/CVVideoPlayer",
     },
+    keywords=[
+        'opencv',
+        'video',
+        'player',
+        'video player',
+        'cvvideoplayer',
+        'computer vision',
+        'image processing',
+        'customizable'
+    ]
 )

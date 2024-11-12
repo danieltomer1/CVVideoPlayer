@@ -38,13 +38,13 @@ on runtime the callbacks hooks will run in order as specified in the input list.
 
 
 ```python
-from cvvideoplayer import VideoPlayer
+from cvvideoplayer import create_video_player
 from cvvideoplayer.frame_editors import FrameInfoOverlay, HistogramEqualizer, FrameNormalizer, KeyMapOverlay
 
-VIDEO_OR_FRAME_FOLDER_PATH = <add local path here>
+VIDEO_OR_FRAME_FOLDER_PATH = "<add local path here>"
 
 def run_player():
-    video_player = VideoPlayer(
+    video_player = create_video_player(
         video_source=VIDEO_OR_FRAME_FOLDER_PATH,
         frame_edit_callbacks=[
             FrameInfoOverlay(),
@@ -55,8 +55,7 @@ def run_player():
         record=True,
     )
 
-    with video_player:
-        video_player.run()
+    video_player.run()
 
 
 if __name__ == "__main__":
