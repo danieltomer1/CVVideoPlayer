@@ -1,3 +1,58 @@
+import os
+import sys
+
+import cv2
+from PIL import Image
+if sys.platform.startswith('win'):
+    import win32gui
+    import win32con
+    import win32api
+from PIL.Image import Resampling
+
+
+def set_window_icon(window_name, icon_path):
+    """
+    Set the icon for an OpenCV window using a JPG image
+
+    Parameters:
+    window_name (str): Name of the OpenCV window
+    icon_path (str): Path to the JPG icon image
+    """
+    try:
+        # Convert JPG to ICO format in memory
+        img = Image.open(icon_path)
+        # Resize to standard icon size if needed
+        img = img.resize((32, 32), resample=Resampling.BICUBIC)
+
+        # Create temporary .ico file
+        ico_path = "icon.ico"
+        img.save(ico_path, format='ICO')
+
+        cv2.namedWindow(window_name)
+        # Get the window handle
+        hwnd = win32gui.FindWindow(None, window_name)
+
+        if hwnd:
+            # Set the icon
+            icon = win32gui.LoadImage(
+                0, ico_path, win32con.IMAGE_ICON,
+                0, 0, win32con.LR_LOADFROMFILE
+            )
+            # Set both small and big icons
+            win32api.SendMessage(
+                hwnd, win32con.WM_SETICON,
+                win32con.ICON_SMALL, icon
+            )
+            win32api.SendMessage(
+                hwnd, win32con.WM_SETICON,
+                win32con.ICON_BIG, icon
+            )
+
+        os.remove(ico_path)
+    except Exception:
+        pass
+
+
 VK_CODE_MAP = {
     0x08: "backspace",
     0x09: "tab",

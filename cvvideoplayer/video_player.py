@@ -29,6 +29,7 @@ from .utils.video_player_utils import (
     CURRENT_OS,
     SupportedOS,
 )
+from .utils.windows_os_utils import set_window_icon
 
 
 class VideoPlayer(abc.ABC):
@@ -131,6 +132,7 @@ class VideoPlayer(abc.ABC):
                 self._show_frame(frame_for_display)
 
     def _open_player(self) -> None:
+        self._set_icon()
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
         time.sleep(0.5)  # make sure video player is up before checking the window id
@@ -301,6 +303,9 @@ class WindowsVideoPlayer(VideoPlayer):
         ]
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
+
+    def _set_icon(self):
+        set_window_icon(self._window_name, icon_path=Path(__file__).parent / "icon.png")
 
 
 class LinuxVideoPlayer(VideoPlayer):
