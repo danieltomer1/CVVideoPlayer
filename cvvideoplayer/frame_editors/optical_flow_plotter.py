@@ -10,10 +10,10 @@ from ..utils.video_player_utils import KeyFunction
 class OpticalFlowPlotter(BaseFrameEditCallback):
 
     def __init__(
-            self,
-            enable_by_default: bool,
-            min_arrow_size_to_draw: float = 10.0,
-            draw_every_n_arrow: int = 80,
+        self,
+        enable_by_default: bool,
+        min_arrow_size_to_draw: float = 10.0,
+        draw_every_n_arrow: int = 80,
     ):
         super().__init__(enable_by_default)
         self._min_arrow_size_to_draw = min_arrow_size_to_draw

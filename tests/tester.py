@@ -32,15 +32,14 @@ def create_video_player_for_snapshot(
 ):
     video_player = create_video_player(
         video_source=Path(source_path),
-        frame_edit_callbacks=frame_edit_callbacks
-        + [FrameSnapshot(output_path, (300, 200), frame_num)],
+        frame_edit_callbacks=frame_edit_callbacks + [FrameSnapshot(output_path, (300, 200), frame_num)],
     )
 
     return video_player
 
 
 def take_snapshot(video_player: VideoPlayer, key_recordings: List[str]):
-    video_player._setup()
+    video_player._open_player()
     for key in key_recordings:
         video_player._input_parser._ui_queue.put(SingleInput(InputType.KeyPress, key))
 
@@ -49,9 +48,7 @@ def take_snapshot(video_player: VideoPlayer, key_recordings: List[str]):
 
 
 def compare_images(expected_path: Path, actual_path: Path, diff_path: Path):
-    assert (
-        actual_path.exists()
-    ), f"Something went wrong, the actual image was not saved at {actual_path}"
+    assert actual_path.exists(), f"Something went wrong, the actual image was not saved at {actual_path}"
     # assert that the two images are the same
     expected_frame = cv2.imread(str(expected_path))
     actual_frame = cv2.imread(str(actual_path))
@@ -233,12 +230,8 @@ if __name__ == "__main__":
         allow_abbrev=False,
     )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--record", action="store_true", default=False, help="Record expected images"
-    )
-    group.add_argument(
-        "--replay", action="store_true", default=False, help="Replay and run the tests"
-    )
+    group.add_argument("--record", action="store_true", default=False, help="Record expected images")
+    group.add_argument("--replay", action="store_true", default=False, help="Replay and run the tests")
 
     args = parser.parse_args()
 

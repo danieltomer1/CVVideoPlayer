@@ -90,6 +90,3 @@ def get_screen_adjusted_frame_size(screen_size, frame_width, frame_height):
 
 def is_window_closed_by_mouse_click(window_name):
     return cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1
-
-
-

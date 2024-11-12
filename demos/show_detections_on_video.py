@@ -15,7 +15,7 @@ def run_player():
         frame_edit_callbacks=[
             DetectionsCsvPlotter(detections_csv_path=Path("../assets/example_video_detections.csv")),
             KeyMapOverlay(),
-            FrameInfoOverlay()
+            FrameInfoOverlay(),
         ],
     )
 

@@ -41,4 +41,3 @@ class InputType(Enum):
 class SingleInput:
     input_type: InputType
     input_data: Union[Tuple, str]
-

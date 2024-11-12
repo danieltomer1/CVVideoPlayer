@@ -114,9 +114,10 @@ class LinuxInputParser(BaseInputParser):
 
 
 class InputHandler:
-    def __init__(self):
+    def __init__(self, window_name: str):
         self._keymap: Dict[str, KeyFunction] = {}
         self._keymap_description: Dict[str, list] = defaultdict(list)
+        self._window_name = window_name
 
     def register_key_function(self, key_function: KeyFunction, callback_name: str) -> None:
         key = key_function.key
@@ -172,7 +173,7 @@ class InputHandler:
     def _handle_mouse_scroll(self, x, y, dx, dy):
         if "mouse_scroll" not in self._keymap:
             return
-        win_x, win_y, win_w, win_h = cv2.getWindowImageRect("CVvideoPlayer")
+        win_x, win_y, win_w, win_h = cv2.getWindowImageRect(self._window_name)
         curser_x = x - win_x
         curser_y = y - win_y
         if curser_x < 0 or curser_y < 0:

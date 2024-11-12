@@ -18,5 +18,5 @@ def main():
 
 if __name__ == "__main__":
     video_player = create_video_player(video_source="../assets/example_video.mp4")
-    video_player._setup()
-    cProfile.run('main()', 'profile_output.prof')
+    video_player._open_player()
+    cProfile.run("main()", "profile_output.prof")
