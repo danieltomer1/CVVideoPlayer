@@ -1,16 +1,13 @@
 import os
-import sys
 
-import cv2
 from PIL import Image
-if sys.platform.startswith('win'):
-    import win32gui
-    import win32con
-    import win32api
+import win32gui
+import win32con
+import win32api
 from PIL.Image import Resampling
 
 
-def set_window_icon(window_name, icon_path):
+def set_icon_windows(window_name, icon_path):
     """
     Set the icon for an OpenCV window using a JPG image
 
@@ -28,7 +25,6 @@ def set_window_icon(window_name, icon_path):
         ico_path = "icon.ico"
         img.save(ico_path, format='ICO')
 
-        cv2.namedWindow(window_name)
         # Get the window handle
         hwnd = win32gui.FindWindow(None, window_name)
 
