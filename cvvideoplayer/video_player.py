@@ -147,13 +147,11 @@ class VideoPlayer(abc.ABC):
                 self._show_frame(frame_for_display)
 
     def _open_player(self) -> None:
-        cv2.namedWindow(self._window_name)
-        cv2.waitKey(10)
-        self._set_icon()
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
         time.sleep(0.5)  # make sure video player is up before checking the window id
         self._window_id = self._get_in_focus_window_id()
+        self._set_icon()
         cv2.waitKey(50)
 
     def _setup_callbacks(self):
@@ -345,13 +343,12 @@ class LinuxVideoPlayer(VideoPlayer):
             subprocess.check_output('xrandr | grep "\*" | cut -d" " -f4', shell=True).decode().strip().split("\n")[0]
         )
         screen_w, screen_h = screen_size_str.split("x")
-        screen_w = 0.9 * int(screen_w)
-        screen_h = 0.9 * int(screen_h)
+        screen_w = 0.85 * int(screen_w)
+        screen_h = 0.85 * int(screen_h)
         return screen_w, screen_h
 
     def _set_icon(self):
-        win_id = self._get_in_focus_window_id()
-        set_icon_linux(win_id, self._display, icon_path=str(Path(__file__).parent / "icon.png"))
+        set_icon_linux(self._window_id, self._display, icon_path=str(Path(__file__).parent / "icon.png"))
 
 
 def create_video_player(**video_kwargs) -> VideoPlayer:
