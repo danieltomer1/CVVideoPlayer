@@ -125,12 +125,13 @@ class VideoPlayer(abc.ABC):
     def _run_player_loop(self):
         while not self._exit:
             if self._get_in_focus_window_id() != self._window_id:
+                self._input_parser.pause()
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
                 else:
-                    cv2.waitKey(20)
+                    cv2.waitKey(100)
                     continue
-
+            self._input_parser.resume()
             try:
                 single_input = self._input_parser.get_input()
             except Empty:
@@ -147,7 +148,7 @@ class VideoPlayer(abc.ABC):
 
     def _open_player(self) -> None:
         cv2.namedWindow(self._window_name)
-        cv2.waitKey(50)
+        cv2.waitKey(10)
         self._set_icon()
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
