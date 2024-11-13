@@ -2,7 +2,7 @@ import sys
 
 from setuptools import setup, find_packages
 
-with open("Readme.md", 'r') as f:
+with open("README.md", 'r') as f:
     long_description = f.read()
 
 windows_requires = []
@@ -13,7 +13,7 @@ if sys.platform.startswith('win'):
 
 setup(
     name="cvvideoplayer",
-    version="1.1.3",
+    version="1.1.4",
     author="Daniel Tomer",
     author_email="danieltomer1@gmail.com",
     description="moduler multi purpose video player for debugging algorithms in python",
