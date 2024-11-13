@@ -14,6 +14,13 @@ class BaseInputParser(metaclass=Singleton):
         self._ui_queue: Queue[SingleInput] = Queue()
         self._modifiers = set()
         self._listeners = []
+        self._queue_is_blocked = False
+
+    def pause(self):
+        self._queue_is_blocked = True
+
+    def resume(self):
+        self._queue_is_blocked = False
 
     def has_input(self) -> bool:
         return not self._ui_queue.empty()
@@ -47,7 +54,7 @@ class BaseInputParser(metaclass=Singleton):
         pass
 
     def _queue_is_open_for_business(self) -> bool:
-        return not self.has_input() or self._allow_queue_buildup
+        return not self._queue_is_blocked and (not self.has_input() or self._allow_queue_buildup)
 
     def _add_mouse_click_to_queue(self, x: int, y: int, button: Button, is_clicked: bool) -> None:
         mouse_button = mouse_button_parser[button]
