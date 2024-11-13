@@ -7,18 +7,13 @@ from queue import Empty
 from typing import Optional, List, Union, Tuple
 from functools import partial
 
-import Xlib
 import cv2
 import numpy as np
 
-from .input_management import (
-    InputHandler,
-    WindowsInputParser,
-    LinuxInputParser,
-    BaseInputParser,
-)
 from .frame_editors import BaseFrameEditCallback
 from .frame_reader import FrameReader
+from .input_management.base_input_parser import BaseInputParser
+from .input_management.input_handler import InputHandler
 from .recorder import AbstractRecorder
 from .utils.video_player_utils import (
     get_screen_adjusted_frame_size,
@@ -29,6 +24,14 @@ from .utils.video_player_utils import (
     CURRENT_OS,
     SupportedOS,
 )
+
+if CURRENT_OS == SupportedOS.LINUX:
+    import Xlib
+    from .utils.linux_os_utils import set_icon_linux
+    from .input_management.linux_input_parser import LinuxInputParser
+elif CURRENT_OS == SupportedOS.WINDOWS:
+    from .utils.windows_os_utils import set_icon_windows
+    from .input_management.windows_input_parser import WindowsInputParser
 
 
 class VideoPlayer(abc.ABC):
@@ -96,16 +99,28 @@ class VideoPlayer(abc.ABC):
 
     @abc.abstractmethod
     def _get_screen_size(self) -> Tuple[int, int]:
-        pass
+        """
+        implemented per platform
+        """
 
     @abc.abstractmethod
     def _get_in_focus_window_id(self) -> int:
-        pass
+        """
+        implemented per platform
+        """
 
     @property
     @abc.abstractmethod
     def _input_parser(self) -> BaseInputParser:
-        pass
+        """
+        implemented per platform
+        """
+
+    @abc.abstractmethod
+    def _set_icon(self):
+        """
+        implemented per platform
+        """
 
     def _run_player_loop(self):
         while not self._exit:
@@ -131,6 +146,9 @@ class VideoPlayer(abc.ABC):
                 self._show_frame(frame_for_display)
 
     def _open_player(self) -> None:
+        cv2.namedWindow(self._window_name)
+        cv2.waitKey(50)
+        self._set_icon()
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
         time.sleep(0.5)  # make sure video player is up before checking the window id
@@ -302,6 +320,9 @@ class WindowsVideoPlayer(VideoPlayer):
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
 
+    def _set_icon(self):
+        set_icon_windows(self._window_name, icon_path=Path(__file__).parent / "icon.png")
+
 
 class LinuxVideoPlayer(VideoPlayer):
     def __init__(self, **video_player_kwargs):
@@ -326,6 +347,10 @@ class LinuxVideoPlayer(VideoPlayer):
         screen_w = 0.9 * int(screen_w)
         screen_h = 0.9 * int(screen_h)
         return screen_w, screen_h
+
+    def _set_icon(self):
+        win_id = self._get_in_focus_window_id()
+        set_icon_linux(win_id, self._display, icon_path=str(Path(__file__).parent / "icon.png"))
 
 
 def create_video_player(**video_kwargs) -> VideoPlayer:
