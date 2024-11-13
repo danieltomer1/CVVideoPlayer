@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-import typing as t
+from typing import Tuple, List
 
 from ..frame_editors import BaseFrameEditCallback
-from ..utils.bbox_utils import Bbox
+from ..utils.bbox_utils import Bbox, BboxFormat
 from ..utils.drawing_utils import draw_rectangle, draw_label
 from ..utils.video_player_utils import KeyFunction
 
@@ -18,12 +18,12 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         enable_by_default: bool = False,
         show_above_bbox_label: bool = True,
         show_below_bbox_label: bool = True,
-        default_bbox_color: t.Tuple[int, int, int] = (255, 0, 0),
-        text_color: t.Tuple[int, int, int] = (255, 255, 255),
+        default_bbox_color: Tuple[int, int, int] = (255, 0, 0),
+        text_color: Tuple[int, int, int] = (255, 255, 255),
         drawing_thickness: int = 1,
-        font_scale: float = 0.5,
-        label_text_color: t.Tuple[int, int, int] = (255, 255, 255),
-        label_filling_color: t.Tuple[int, int, int] = (0, 0, 0),
+        font_scale: float = 2.0,
+        label_text_color: Tuple[int, int, int] = (255, 255, 255),
+        label_filling_color: Tuple[int, int, int] = (0, 0, 0),
     ):
         super().__init__(enable_by_default)
         self._text_color = text_color
@@ -34,9 +34,10 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         self._default_bbox_color = default_bbox_color
         self._label_text_color = label_text_color
         self._label_filling_color = label_filling_color
+        self._original_frame_shape = None
 
     @abstractmethod
-    def get_bboxes(self, frame, frame_num) -> t.List[Bbox]:
+    def get_bboxes(self, frame, frame_num) -> List[Bbox]:
         pass
 
     @property
@@ -49,23 +50,39 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             KeyFunction(key="ctrl+u", func=lambda: self._change_font_size(-0.1), description="decrease label size"),
         ]
 
-    def before_frame_resize(self, video_player, frame, frame_num):
+    def setup(self, video_player, frame) -> None:
+        self._original_frame_shape = frame.shape
+
+    def after_frame_resize(self, video_player, frame, frame_num):
         for bbox in self.get_bboxes(frame, frame_num):
+            norm_bbox = bbox.get_normalized_bbox(
+                frame_width=self._original_frame_shape[1],
+                frame_height=self._original_frame_shape[0],
+                bbox_format=BboxFormat.xywh,
+            )
+
+            resized_bbox_coords = (
+                int(norm_bbox[0] * frame.shape[1]),
+                int(norm_bbox[1] * frame.shape[0]),
+                int(norm_bbox[2] * frame.shape[1]),
+                int(norm_bbox[3] * frame.shape[0]),
+            )
+
             draw_rectangle(
                 frame,
-                x=bbox.x1,
-                y=bbox.y1,
-                w=bbox.width,
-                h=bbox.height,
+                x=resized_bbox_coords[0],
+                y=resized_bbox_coords[1],
+                w=resized_bbox_coords[2],
+                h=resized_bbox_coords[3],
                 color=bbox.color or self._default_bbox_color,
                 thickness=self._thickness,
             )
             if self._show_above_bbox_label and bbox.above_label is not None:
                 draw_label(
                     frame=frame,
-                    bbox_x1=bbox.x1,
-                    bbox_y1=bbox.y1,
-                    bbox_h=bbox.height,
+                    bbox_x1=resized_bbox_coords[0],
+                    bbox_y1=resized_bbox_coords[1],
+                    bbox_h=resized_bbox_coords[3],
                     below_or_above="above",
                     text=bbox.above_label,
                     font_scale=self._font_scale,
@@ -77,9 +94,9 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             if self._show_below_bbox_label and bbox.below_label is not None:
                 draw_label(
                     frame=frame,
-                    bbox_x1=bbox.x1,
-                    bbox_y1=bbox.y1,
-                    bbox_h=bbox.height,
+                    bbox_x1=resized_bbox_coords[0],
+                    bbox_y1=resized_bbox_coords[1],
+                    bbox_h=resized_bbox_coords[3],
                     below_or_above="below",
                     text=bbox.below_label,
                     font_scale=self._font_scale,
