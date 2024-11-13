@@ -1,15 +1,8 @@
-import sys
 
 from setuptools import setup, find_packages
 
 with open("README.md", 'r') as f:
     long_description = f.read()
-
-windows_requires = []
-if sys.platform.startswith('win'):
-    windows_requires = [
-        'pywin32',  # Example Windows-only package
-    ]
 
 setup(
     name="cvvideoplayer",
@@ -29,9 +22,9 @@ setup(
         "numpy",
         "opencv-python",
         "pynput",
-        "python-xlib",
         "matplotlib",
-        *windows_requires
+        "python-xlib;platform_system=='Linux'",
+        "pywin32;platform_system=='Windows'"
     ],
     python_requires=">=3.8",
     project_urls={
