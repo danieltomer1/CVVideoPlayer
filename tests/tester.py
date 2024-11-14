@@ -10,7 +10,8 @@ import inspect
 from cvvideoplayer.frame_editors.basic_frame_editors.frame_snapshot import FrameSnapshot
 from cvvideoplayer.frame_editors.optical_flow_plotter import OpticalFlowPlotter
 from cvvideoplayer.utils.ui_utils import InputType, SingleInput
-from cvvideoplayer.video_player import VideoPlayer, create_video_player
+from cvvideoplayer.video_players.base_video_player import VideoPlayer
+from cvvideoplayer import create_video_player
 import cv2
 
 
