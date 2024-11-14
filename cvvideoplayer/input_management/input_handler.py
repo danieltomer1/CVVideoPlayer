@@ -34,7 +34,7 @@ class InputHandler:
 
         self._keymap[key] = key_function
         if key_function.description:
-            self._keymap_description[callback_name].append(f"{key:20.20}: {key_function.description:60.60}")
+            self._keymap_description[callback_name].append((key, key_function.description))
 
     def get_keymap_description(self) -> dict:
         return self._keymap_description
