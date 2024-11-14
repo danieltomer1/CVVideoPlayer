@@ -98,5 +98,18 @@ class LocalDirReader(FrameReader):
         return len(self._frame_paths)
 
 
+class TestingFrameReader(FrameReader):
+    def __init__(self, video_len=20):
+        self._video = np.random.randint(low=0, high=255, size=(video_len, 10, 10, 3), dtype=np.uint8)
+
+    def get_frame(self, frame_num: int) -> Optional[np.ndarray]:
+        if frame_num >= len(self):
+            return
+        return self._video[frame_num]
+
+    def __len__(self) -> int:
+        return self._video.shape[0]
+
+
 def extract_digits_from_str(string):
     return "".join([char for char in string if char.isdigit()])
