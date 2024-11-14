@@ -13,11 +13,37 @@ elif CURRENT_OS == SupportedOS.WINDOWS:
     from .windows_video_player import WindowsVideoPlayer
 
 
-def create_video_player(**video_kwargs) -> VideoPlayer:
+def create_video_player(
+        video_source: Union[str, Path, FrameReader],
+        start_from_frame: int = 0,
+        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+        record: Union[bool, AbstractRecorder] = False,
+) -> VideoPlayer:
+    """
+    Params:
+    - video_source : Union[str, Path, FrameReader] The source of the video to be played. It can be a file path, a
+     directory path, or a FrameReader instance.
+    - start_from_frame : int, optional The frame number to start the video from (default is 0).
+    - frame_edit_callbacks : list, optional A list of frame editing callbacks (default is None).
+     Each callback must be an instance of BaseFrameEditCallback.
+    - record : Union[bool, AbstractRecorder], optional Whether to record the video or not (default is False).
+    It can also be an instance of AbstractRecorder for custom recording functionality.
+    """
     if CURRENT_OS == SupportedOS.WINDOWS:
-        return WindowsVideoPlayer(**video_kwargs)
+        video_player_class = WindowsVideoPlayer
+
     elif CURRENT_OS == SupportedOS.LINUX:
-        return LinuxVideoPlayer(**video_kwargs)
+        video_player_class = LinuxVideoPlayer
+
+    else:
+        raise ValueError(f"Unsupported OS: {CURRENT_OS}")
+
+    return video_player_class(
+        video_source=video_source,
+        start_from_frame=start_from_frame,
+        frame_edit_callbacks=frame_edit_callbacks,
+        record=record,
+    )
 
 
 class DeprecatedVideoPlayer:
