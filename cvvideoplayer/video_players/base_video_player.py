@@ -117,13 +117,13 @@ class VideoPlayer(abc.ABC):
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
                 else:
-                    cv2.waitKey(100)
+                    cv2.pollKey()
                     continue
             self._input_parser.resume()
             try:
                 single_input = self._input_parser.get_input()
             except Empty:
-                cv2.waitKey(1)
+                cv2.pollKey()
                 continue
 
             self.input_handler.handle_input(single_input)
@@ -140,7 +140,7 @@ class VideoPlayer(abc.ABC):
         time.sleep(0.5)  # make sure video player is up before checking the window id
         self._window_id = self._get_in_focus_window_id()
         self._set_icon()
-        cv2.waitKey(50)
+        cv2.pollKey()
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
@@ -190,7 +190,7 @@ class VideoPlayer(abc.ABC):
 
     def _show_frame(self, frame):
         cv2.imshow(winname=self._window_name, mat=frame)
-        cv2.waitKey(1)
+        cv2.pollKey()
 
     def _play_continuously(self) -> None:
         while (not self._input_parser.has_input()) and self._play and not self._exit:

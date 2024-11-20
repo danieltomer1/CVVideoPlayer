@@ -27,7 +27,7 @@ class WindowsVideoPlayer(VideoPlayer):
 
     def _show_frame(self, frame) -> None:
         super()._show_frame(frame)
-        cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
+        cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
 
     @property
     def _input_parser(self):
