@@ -97,6 +97,12 @@ class VideoPlayer(abc.ABC):
         implemented per platform
         """
 
+    @abc.abstractmethod
+    def _get_player_window_id(self) -> int:
+        """
+        implemented per platform
+        """
+
     @property
     @abc.abstractmethod
     def _input_parser(self) -> BaseInputParser:
@@ -137,8 +143,7 @@ class VideoPlayer(abc.ABC):
     def _open_player(self) -> None:
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
-        time.sleep(0.5)  # make sure video player is up before checking the window id
-        self._window_id = self._get_in_focus_window_id()
+        self._window_id = self._get_player_window_id()
         self._set_icon()
         cv2.pollKey()
 

@@ -1,7 +1,9 @@
 import subprocess
+import time
 from pathlib import Path
 
 import Xlib
+from Xlib import X
 
 from ..input_management.linux_input_parser import LinuxInputParser
 from ..utils.linux_os_utils import set_icon_linux
@@ -22,6 +24,22 @@ class LinuxVideoPlayer(VideoPlayer):
         if isinstance(window, int):
             return ""
         return window.id
+
+    def _get_player_window_id(self):
+        time.sleep(0.05)
+        d = Xlib.display.Display()
+        root = d.screen().root
+
+        # Get all the window IDs on the current display
+        window_ids = root.get_full_property(d.intern_atom('_NET_CLIENT_LIST'), X.AnyPropertyType).value
+        for window_id in window_ids:
+            # Get the window object
+            window = d.create_resource_object('window', window_id)
+
+            # Get the window name
+            name = window.get_wm_name()
+            if name and self._window_name in name:
+                return window_id
 
     def _get_screen_size(self):
         screen_size_str = (

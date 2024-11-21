@@ -1,4 +1,5 @@
 import ctypes
+from ctypes.wintypes import LPCWSTR, HWND
 from pathlib import Path
 
 import cv2
@@ -43,6 +44,16 @@ class WindowsVideoPlayer(VideoPlayer):
         pid = ctypes.wintypes.DWORD()
         ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
         return pid.value
+
+    def _get_player_window_id(self):
+        user32 = ctypes.windll.user32
+        user32.FindWindowW.argtypes = [LPCWSTR, LPCWSTR]
+        user32.FindWindowW.restype = HWND
+        h_wnd = user32.FindWindowW(None, self._window_name)
+        pid = ctypes.wintypes.DWORD()
+        ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+        return pid.value
+
 
     def _add_default_key_functions(self) -> None:
         super()._add_default_key_functions()
