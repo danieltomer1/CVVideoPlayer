@@ -27,7 +27,13 @@ class BaseFrameEditCallback:
         Optionally define how the editor should close when video player is closed
         """
 
-    def before_frame_resize(self, video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def before_frame_resize(
+            self,
+            video_player: "VideoPlayer",
+            frame: np.ndarray,
+            frame_num: int,
+            original_frame: np.ndarray,
+    ) -> np.ndarray:
         """
         This function receives the frame before it has been resized and should return the frame
         after it has been altered in any way desirable by the user. In this hook you ere not allowed to change the
@@ -35,22 +41,30 @@ class BaseFrameEditCallback:
 
         Args:
             video_player: an instance fo VideoPlayer
-            frame (): the input frame
+            frame (): the frame to be edited and displayed
             frame_num ():
+            original_frame () the frame before any alterations
 
         Returns: the edited frame
         """
         return frame
 
-    def after_frame_resize(self, video_player: "VideoPlayer", frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(
+            self,
+            video_player: "VideoPlayer",
+            frame: np.ndarray,
+            frame_num: int,
+            original_frame: np.ndarray,
+    ) -> np.ndarray:
         """
         This function receives the frame after it has been resized to fit the screen size and should return the frame
         after it has been altered in any way desirable by the user
 
         Args:
             video_player: an instance fo VideoPlayer
-            frame (): the input frame
+            frame (): the frame to be edited and displayed
             frame_num ():
+            original_frame () the frame before any alterations
 
         Returns: the edited frame
         """

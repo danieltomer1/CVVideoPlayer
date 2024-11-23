@@ -162,36 +162,40 @@ class VideoPlayer(abc.ABC):
                     callback.__class__.__name__,
                 )
 
-            callback.setup(self, frame=self._get_current_frame())
+            callback.setup(video_player=self, frame=self._get_current_frame())
 
     def _create_frame_to_display(self) -> np.ndarray:
-        frame = self._get_current_frame().copy()
+        original_frame = self._get_current_frame()
+        frame_to_display = original_frame.copy()
 
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            shape_before_edit = frame.shape[:2]
-            frame = callback.before_frame_resize(self, frame, self._current_frame_num)
-            assert frame.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
+            shape_before_edit = frame_to_display.shape[:2]
+            frame_to_display = callback.before_frame_resize(
+                video_player=self,
+                frame=frame_to_display,
+                frame_num=self._current_frame_num,
+                original_frame=original_frame,
+            )
+            assert frame_to_display.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
 
-        frame = self._crop_and_resize_frame(frame)
+        frame_to_display = self._crop_and_resize_frame(frame_to_display)
 
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            frame = callback.after_frame_resize(self, frame, self._current_frame_num)
-
-        #  we resize again in case frame size has been changed in "after_frame_resize" hooks
-        if (
-            frame.shape[0] != self._screen_adjusted_frame_size[1]
-            or frame.shape[1] != self._screen_adjusted_frame_size[0]
-        ):
-            frame = cv2.resize(frame, self._screen_adjusted_frame_size)
+            frame_to_display = callback.after_frame_resize(
+                video_player=self,
+                frame=frame_to_display,
+                frame_num=self._current_frame_num,
+                original_frame=original_frame,
+            )
 
         if self._recorder is not None:
-            self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
+            self._recorder.write_frame_to_video(self, frame_to_display, self._current_frame_num)
 
-        return frame
+        return frame_to_display
 
     def _show_frame(self, frame):
         cv2.imshow(winname=self._window_name, mat=frame)
