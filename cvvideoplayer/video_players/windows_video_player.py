@@ -54,7 +54,6 @@ class WindowsVideoPlayer(VideoPlayer):
         ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
         return pid.value
 
-
     def _add_default_key_functions(self) -> None:
         super()._add_default_key_functions()
         scroll_to_zoom = KeyFunction(key="mouse_scroll", func=self._set_zoom, description="zoom in and out")
@@ -79,7 +78,7 @@ class WindowsVideoPlayer(VideoPlayer):
                 int(self._original_frame_size[1] * h),
             )
 
-    def _crop_and_resize_frame(self, frame) -> np.ndarray:
+    def crop_and_resize_frame(self, frame) -> np.ndarray:
         frame = frame[
             self._zoom_crop_xywh[1] : self._zoom_crop_xywh[1] + self._zoom_crop_xywh[3],
             self._zoom_crop_xywh[0] : self._zoom_crop_xywh[0] + self._zoom_crop_xywh[2],

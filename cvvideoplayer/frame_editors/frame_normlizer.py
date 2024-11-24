@@ -32,7 +32,7 @@ class FrameNormalizer(BaseFrameEditCallback):
         else:
             raise ValueError(f"image must be either Uint8 or Uint16 but got {frame.dtype}")
 
-    def after_frame_resize(self, frame, **kwargs) -> np.ndarray:
+    def edit_frame(self, frame, **kwargs) -> np.ndarray:
 
         frame = frame.astype("float")
         frame /= self._norm_factor

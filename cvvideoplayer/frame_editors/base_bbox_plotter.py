@@ -52,7 +52,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     def setup(self, video_player, frame) -> None:
         self._original_frame_shape = frame.shape
 
-    def after_frame_resize(self, frame, frame_num, **kwargs):
+    def edit_frame(self, frame, frame_num, **kwargs):
         for bbox in self.get_bboxes(frame, frame_num):
             norm_bbox = bbox.get_normalized_bbox(
                 frame_width=self._original_frame_shape[1],

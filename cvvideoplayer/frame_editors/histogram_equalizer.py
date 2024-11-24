@@ -27,6 +27,6 @@ class HistogramEqualizer(BaseFrameEditCallback):
         else:
             raise ValueError(f"image must be either Uint8 or Uint16 but got {frame.dtype}")
 
-    def after_frame_resize(self, frame: np.ndarray, **kwargs) -> np.ndarray:
+    def edit_frame(self, frame: np.ndarray, **kwargs) -> np.ndarray:
         frame = hist_eq(frame, self._norm_factor)
         return frame

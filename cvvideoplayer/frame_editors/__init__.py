@@ -7,3 +7,4 @@ from .key_map_overlay import KeyMapOverlay
 from .frame_info_overlay import FrameInfoOverlay
 from .histogram_equalizer import HistogramEqualizer
 from .frame_snapshot import FrameSnapshot
+from .fit_frame_to_screen import FitFrameToScreen

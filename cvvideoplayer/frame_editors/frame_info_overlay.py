@@ -32,7 +32,7 @@ class FrameInfoOverlay(BaseFrameEditCallback):
         self._video_total_frame_num = len(video_player.frame_reader)
         self._orig_res = frame.shape
 
-    def after_frame_resize(self, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
+    def edit_frame(self, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
         text = f"{frame_num}"
         if self._video_total_frame_num is not None:
             text += f"/{self._video_total_frame_num - 1}"
