@@ -23,14 +23,24 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def enabled(self):
         return self._enabled
 
-    def before_frame_resize(self, video_player, frame: np.ndarray, frame_num: int) -> np.ndarray:
+    def after_frame_resize(
+        self,
+        video_player: "VideoPlayer",
+        frame: np.ndarray,
+        original_frame: np.ndarray,
+        frame_num: int
+    ) -> np.ndarray:
+
         if frame_num == 0:
             return frame
 
         prev_frame = video_player.frame_reader.get_frame(frame_num - 1)
-        gray_frame, prev_gray_frame = self._convert_frames_to_gray(frame, prev_frame)
+        gray_frame, prev_gray_frame = self._convert_frames_to_gray(original_frame, prev_frame)
         flow = self._calc_optical_flow(gray_frame, prev_gray_frame)
-        frame = self._put_optical_flow_arrows_on_frame(frame, optical_flow_image=flow)
+        frame = self._create_optical_flow_arrows_image(
+            frame=frame,
+            optical_flow_image=flow,
+        )
 
         return frame
 
@@ -41,10 +51,8 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def key_function_to_register(self) -> List[KeyFunction]:
         return [KeyFunction("o", func=self.enable_disable, description="show optical flow")]
 
-    def _put_optical_flow_arrows_on_frame(self, frame, optical_flow_image):
-        # Turn grayscale to rgb if needed
-        if len(frame.shape) == 2:
-            frame = np.stack((frame,) * 3, axis=2)
+    def _create_optical_flow_arrows_image(self, optical_flow_image, frame):
+        resize_factor = (np.array(frame.shape[:2]) / np.array(optical_flow_image.shape[:2]))
 
         # Get start and end coordinates of the optical flow
         flow_start = np.stack(np.meshgrid(range(optical_flow_image.shape[1]), range(optical_flow_image.shape[0])), 2)
@@ -60,8 +68,8 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
             y, x = nz[0][i], nz[1][i]
             cv2.arrowedLine(
                 frame,
-                pt1=tuple(flow_start[y, x]),
-                pt2=tuple(flow_end[y, x]),
+                pt1=tuple((flow_start[y, x] * resize_factor).astype(np.int32)),
+                pt2=tuple((flow_end[y, x] * resize_factor).astype(np.int32)),
                 color=(0, 255, 0),
                 thickness=1,
                 tipLength=0.2,

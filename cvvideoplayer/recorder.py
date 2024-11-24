@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 
 if TYPE_CHECKING:
-    from .video_player import VideoPlayer
+    from .video_players.base_video_player import VideoPlayer
 
 
 class AbstractRecorder(ABC):

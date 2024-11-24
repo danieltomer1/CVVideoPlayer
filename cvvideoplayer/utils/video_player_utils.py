@@ -56,13 +56,16 @@ def get_recorder(record):
     return recorder
 
 
-def hist_eq_uint16(img):
-    hist, bins = np.histogram(img.flatten(), 65536, (0, 65536))  # Collect 16 bits histogram (65536 = 2^16).
+def hist_eq(img, max_value):
+    hist, bins = np.histogram(img.flatten(), max_value, (0, max_value))  # Collect 16 bits histogram (65536 = 2^16).
     cdf = hist.cumsum()
 
     cdf_m = np.ma.masked_equal(cdf, 0)  # Find the minimum histogram value (excluding 0)
-    cdf_m = (cdf_m - cdf_m.min()) * 65535 / (cdf_m.max() - cdf_m.min())
-    cdf = np.ma.filled(cdf_m, 0).astype("uint16")
+    cdf_m = (cdf_m - cdf_m.min()) * max_value / (cdf_m.max() - cdf_m.min())
+    if max_value == 255:
+        cdf = np.ma.filled(cdf_m, 0,).astype("uint8")
+    else:
+        cdf = np.ma.filled(cdf_m, 0).astype("uint16")
 
     # Now we have the look-up table...
     hist_eq_img = cdf[img]

@@ -43,7 +43,6 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     @property
     def key_function_to_register(self):
         return [
-            KeyFunction(key="d", func=self.enable_disable, description="Show/Hide Detections"),
             KeyFunction(key="l", func=self._toggle_show_above_bbox_label, description="Show/Hide above label"),
             KeyFunction(key="b", func=self._toggle_show_below_bbox_label, description="Show/Hide below label"),
             KeyFunction(key="ctrl+i", func=lambda: self._change_font_size(0.1), description="increase label size"),
@@ -53,7 +52,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     def setup(self, video_player, frame) -> None:
         self._original_frame_shape = frame.shape
 
-    def after_frame_resize(self, video_player, frame, frame_num):
+    def after_frame_resize(self, frame, frame_num, **kwargs):
         for bbox in self.get_bboxes(frame, frame_num):
             norm_bbox = bbox.get_normalized_bbox(
                 frame_width=self._original_frame_shape[1],

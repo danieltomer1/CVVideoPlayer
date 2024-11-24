@@ -1,11 +1,8 @@
 from .video_player_utils import CURRENT_OS, SupportedOS
 
 if CURRENT_OS == SupportedOS.LINUX:
-    import cv2
     from PIL import Image
     import Xlib.display
-    from Xlib import X
-    import os
 
 
 def rgba_to_uint32(r, g, b, a):

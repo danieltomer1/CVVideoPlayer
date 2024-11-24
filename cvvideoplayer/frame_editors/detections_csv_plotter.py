@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 import typing as t
 
+from ..utils.video_player_utils import KeyFunction
 from ..frame_editors import BaseBboxPlotter
 from ..utils.bbox_utils import Bbox
 
@@ -37,3 +38,9 @@ class DetectionsCsvPlotter(BaseBboxPlotter):
 
     def get_bboxes(self, frame, frame_num) -> t.List[Bbox]:
         return self._detections[frame_num]
+
+    @property
+    def key_function_to_register(self):
+        key_list = super().key_function_to_register
+        key_list.append(KeyFunction(key="d", func=self.enable_disable, description="Show/Hide detections"))
+        return key_list

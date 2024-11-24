@@ -1,6 +1,4 @@
 import abc
-import ctypes
-import subprocess
 import time
 from pathlib import Path
 from queue import Empty
@@ -10,28 +8,18 @@ from functools import partial
 import cv2
 import numpy as np
 
-from .frame_editors import BaseFrameEditCallback
-from .frame_reader import FrameReader
-from .input_management.base_input_parser import BaseInputParser
-from .input_management.input_handler import InputHandler
-from .recorder import AbstractRecorder
-from .utils.video_player_utils import (
+from ..frame_editors import BaseFrameEditCallback
+from ..frame_reader import FrameReader
+from ..input_management.base_input_parser import BaseInputParser
+from ..input_management.input_handler import InputHandler
+from ..recorder import AbstractRecorder
+from ..utils.video_player_utils import (
     get_screen_adjusted_frame_size,
     KeyFunction,
     is_window_closed_by_mouse_click,
     get_frame_reader,
     get_recorder,
-    CURRENT_OS,
-    SupportedOS,
 )
-
-if CURRENT_OS == SupportedOS.LINUX:
-    import Xlib
-    from .utils.linux_os_utils import set_icon_linux
-    from .input_management.linux_input_parser import LinuxInputParser
-elif CURRENT_OS == SupportedOS.WINDOWS:
-    from .utils.windows_os_utils import set_icon_windows
-    from .input_management.windows_input_parser import WindowsInputParser
 
 
 class VideoPlayer(abc.ABC):
@@ -109,6 +97,12 @@ class VideoPlayer(abc.ABC):
         implemented per platform
         """
 
+    @abc.abstractmethod
+    def _get_player_window_id(self) -> int:
+        """
+        implemented per platform
+        """
+
     @property
     @abc.abstractmethod
     def _input_parser(self) -> BaseInputParser:
@@ -129,13 +123,13 @@ class VideoPlayer(abc.ABC):
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
                 else:
-                    cv2.waitKey(100)
+                    cv2.pollKey()
                     continue
             self._input_parser.resume()
             try:
                 single_input = self._input_parser.get_input()
             except Empty:
-                cv2.waitKey(1)
+                cv2.pollKey()
                 continue
 
             self.input_handler.handle_input(single_input)
@@ -149,10 +143,9 @@ class VideoPlayer(abc.ABC):
     def _open_player(self) -> None:
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
-        time.sleep(0.5)  # make sure video player is up before checking the window id
-        self._window_id = self._get_in_focus_window_id()
+        self._window_id = self._get_player_window_id()
         self._set_icon()
-        cv2.waitKey(50)
+        cv2.pollKey()
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
@@ -169,40 +162,44 @@ class VideoPlayer(abc.ABC):
                     callback.__class__.__name__,
                 )
 
-            callback.setup(self, frame=self._get_current_frame())
+            callback.setup(video_player=self, frame=self._get_current_frame())
 
     def _create_frame_to_display(self) -> np.ndarray:
-        frame = self._get_current_frame().copy()
+        original_frame = self._get_current_frame()
+        frame_to_display = original_frame.copy()
 
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            shape_before_edit = frame.shape[:2]
-            frame = callback.before_frame_resize(self, frame, self._current_frame_num)
-            assert frame.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
+            shape_before_edit = frame_to_display.shape[:2]
+            frame_to_display = callback.before_frame_resize(
+                video_player=self,
+                frame=frame_to_display,
+                frame_num=self._current_frame_num,
+                original_frame=original_frame,
+            )
+            assert frame_to_display.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
 
-        frame = self._crop_and_resize_frame(frame)
+        frame_to_display = self._crop_and_resize_frame(frame_to_display)
 
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            frame = callback.after_frame_resize(self, frame, self._current_frame_num)
-
-        #  we resize again in case frame size has been changed in "after_frame_resize" hooks
-        if (
-            frame.shape[0] != self._screen_adjusted_frame_size[1]
-            or frame.shape[1] != self._screen_adjusted_frame_size[0]
-        ):
-            frame = cv2.resize(frame, self._screen_adjusted_frame_size)
+            frame_to_display = callback.after_frame_resize(
+                video_player=self,
+                frame=frame_to_display,
+                frame_num=self._current_frame_num,
+                original_frame=original_frame,
+            )
 
         if self._recorder is not None:
-            self._recorder.write_frame_to_video(self, frame, self._current_frame_num)
+            self._recorder.write_frame_to_video(self, frame_to_display, self._current_frame_num)
 
-        return frame
+        return frame_to_display
 
     def _show_frame(self, frame):
         cv2.imshow(winname=self._window_name, mat=frame)
-        cv2.waitKey(1)
+        cv2.pollKey()
 
     def _play_continuously(self) -> None:
         while (not self._input_parser.has_input()) and self._play and not self._exit:
@@ -253,125 +250,4 @@ class VideoPlayer(abc.ABC):
             self.input_handler.register_key_function(key_function, "Video Control")
 
 
-class WindowsVideoPlayer(VideoPlayer):
-    def __init__(self, **video_player_kwargs):
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)
-        super().__init__(**video_player_kwargs)
-        self._zoom_factor = 1.0
-        self._zoom_crop_xywh = None
-        current_frame = self._get_current_frame()
-        self._original_frame_size = tuple(current_frame.shape[:2][::-1])
-        self._zoom_crop_xywh = (
-            0,
-            0,
-            self._original_frame_size[0],
-            self._original_frame_size[1],
-        )
 
-    def _show_frame(self, frame) -> None:
-        super()._show_frame(frame)
-        cv2.waitKey(1)  # for some reason Windows OS requires an additional waitKey to work properly
-
-    @property
-    def _input_parser(self):
-        return WindowsInputParser()
-
-    def _get_screen_size(self):
-        user32 = ctypes.windll.user32
-        screensize = 0.9 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
-        return screensize
-
-    def _get_in_focus_window_id(self):
-        h_wnd = ctypes.windll.user32.GetForegroundWindow()
-        pid = ctypes.wintypes.DWORD()
-        ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
-        return pid.value
-
-    def _add_default_key_functions(self) -> None:
-        super()._add_default_key_functions()
-        scroll_to_zoom = KeyFunction(key="mouse_scroll", func=self._set_zoom, description="zoom in and out")
-        self.input_handler.register_key_function(key_function=scroll_to_zoom, callback_name="Video Control")
-
-    def _set_zoom(self, curser_x: int, curser_y: int, scroll_direction: int):
-        new_zoom_factor = max(1.0, min(5.0, self._zoom_factor + 0.5 * scroll_direction))
-        if new_zoom_factor != self._zoom_factor:
-            self._zoom_factor = new_zoom_factor
-            adjusted_width, adjusted_height = self._screen_adjusted_frame_size
-            norm_curser_position = (
-                curser_x / adjusted_width,
-                curser_y / adjusted_height,
-            )
-            w = h = 1 / self._zoom_factor
-            x_min = norm_curser_position[0] * (1 - w)
-            y_min = norm_curser_position[1] * (1 - h)
-            self._zoom_crop_xywh = (
-                int(self._original_frame_size[0] * x_min),
-                int(self._original_frame_size[1] * y_min),
-                int(self._original_frame_size[0] * w),
-                int(self._original_frame_size[1] * h),
-            )
-
-    def _crop_and_resize_frame(self, frame) -> np.ndarray:
-        frame = frame[
-            self._zoom_crop_xywh[1] : self._zoom_crop_xywh[1] + self._zoom_crop_xywh[3],
-            self._zoom_crop_xywh[0] : self._zoom_crop_xywh[0] + self._zoom_crop_xywh[2],
-        ]
-        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
-        return frame
-
-    def _set_icon(self):
-        set_icon_windows(self._window_name, icon_path=Path(__file__).parent / "icon.png")
-
-
-class LinuxVideoPlayer(VideoPlayer):
-    def __init__(self, **video_player_kwargs):
-        super().__init__(**video_player_kwargs)
-        self._display = Xlib.display.Display()
-
-    @property
-    def _input_parser(self):
-        return LinuxInputParser()
-
-    def _get_in_focus_window_id(self):
-        window = self._display.get_input_focus().focus
-        if isinstance(window, int):
-            return ""
-        return window.id
-
-    def _get_screen_size(self):
-        screen_size_str = (
-            subprocess.check_output('xrandr | grep "\*" | cut -d" " -f4', shell=True).decode().strip().split("\n")[0]
-        )
-        screen_w, screen_h = screen_size_str.split("x")
-        screen_w = 0.85 * int(screen_w)
-        screen_h = 0.85 * int(screen_h)
-        return screen_w, screen_h
-
-    def _set_icon(self):
-        set_icon_linux(self._window_id, self._display, icon_path=str(Path(__file__).parent / "icon.png"))
-
-
-def create_video_player(**video_kwargs) -> VideoPlayer:
-    if CURRENT_OS == SupportedOS.WINDOWS:
-        return WindowsVideoPlayer(**video_kwargs)
-    elif CURRENT_OS == SupportedOS.LINUX:
-        return LinuxVideoPlayer(**video_kwargs)
-
-
-class DeprecatedVideoPlayer:
-    def __init__(
-        self,
-        video_source: Union[str, Path, FrameReader],
-        start_from_frame: int = 0,
-        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
-        record: Union[bool, AbstractRecorder] = False,
-    ):
-        self._video_player = create_video_player(
-            video_source=video_source,
-            start_from_frame=start_from_frame,
-            frame_edit_callbacks=frame_edit_callbacks,
-            record=record,
-        )
-
-    def run(self) -> None:
-        self._video_player.run()
