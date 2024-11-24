@@ -1,8 +1,7 @@
 from pathlib import Path
 import cv2
 import numpy as np
-from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...video_players.base_video_player import VideoPlayer
+from .base_frame_edit_callback import BaseFrameEditCallback
 
 from typing import Tuple
 

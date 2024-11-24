@@ -2,9 +2,9 @@ from typing import Tuple
 
 import numpy as np
 
-from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...utils.video_player_utils import KeyFunction
-from ...utils.drawing_utils import write_text_on_img
+from .base_frame_edit_callback import BaseFrameEditCallback
+from ..utils.video_player_utils import KeyFunction
+from ..utils.drawing_utils import write_text_on_img
 
 
 class FrameInfoOverlay(BaseFrameEditCallback):

@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...utils.video_player_utils import hist_eq, KeyFunction
+from .base_frame_edit_callback import BaseFrameEditCallback
+from ..utils.video_player_utils import hist_eq, KeyFunction
 
 
 class HistogramEqualizer(BaseFrameEditCallback):
