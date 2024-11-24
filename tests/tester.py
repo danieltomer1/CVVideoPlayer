@@ -2,13 +2,14 @@ import argparse
 from pathlib import Path
 from typing import List
 import sys
-from cvvideoplayer.frame_editors.base_frame_edit_callback import BaseFrameEditCallback
-from cvvideoplayer.frame_editors.basic_frame_editors.frame_info_overlay import (
+from cvvideoplayer.frame_editors import (
+    BaseFrameEditCallback,
     FrameInfoOverlay,
+    OpticalFlowPlotter,
+    FrameSnapshot
 )
+
 import inspect
-from cvvideoplayer.frame_editors.basic_frame_editors.frame_snapshot import FrameSnapshot
-from cvvideoplayer.frame_editors.optical_flow_plotter import OpticalFlowPlotter
 from cvvideoplayer.utils.ui_utils import InputType, SingleInput
 from cvvideoplayer.video_players.base_video_player import VideoPlayer
 from cvvideoplayer import create_video_player

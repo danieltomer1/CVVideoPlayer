@@ -1,5 +1,4 @@
 import abc
-import time
 from pathlib import Path
 from queue import Empty
 from typing import Optional, List, Union, Tuple
@@ -8,13 +7,18 @@ from functools import partial
 import cv2
 import numpy as np
 
-from ..frame_editors import BaseFrameEditCallback
+from ..frame_editors import (
+    BaseFrameEditCallback,
+    FitFrameToScreen,
+    FrameInfoOverlay,
+    KeyMapOverlay,
+)
 from ..frame_reader import FrameReader
 from ..input_management.base_input_parser import BaseInputParser
 from ..input_management.input_handler import InputHandler
 from ..recorder import AbstractRecorder
 from ..utils.video_player_utils import (
-    get_screen_adjusted_frame_size,
+    calc_screen_adjusted_frame_size,
     KeyFunction,
     is_window_closed_by_mouse_click,
     get_frame_reader,
@@ -49,10 +53,15 @@ class VideoPlayer(abc.ABC):
         self._current_frame_num = start_from_frame
 
         self._screen_size = self._get_screen_size()
-        self._screen_adjusted_frame_size = None
         self._original_frame_size = None
 
-        self._frame_edit_callbacks = frame_edit_callbacks or []
+        self._frame_edit_callbacks = frame_edit_callbacks
+        if self._frame_edit_callbacks is None:
+            self._frame_edit_callbacks = [
+                FitFrameToScreen(),
+                FrameInfoOverlay(),
+                KeyMapOverlay(),
+            ]
 
         self._play = False
         self._exit = False
@@ -60,7 +69,7 @@ class VideoPlayer(abc.ABC):
         self._setup_callbacks()
 
         current_frame = self._get_current_frame()
-        self._screen_adjusted_frame_size = get_screen_adjusted_frame_size(
+        self._screen_adjusted_frame_size = calc_screen_adjusted_frame_size(
             screen_size=self._screen_size,
             frame_width=current_frame.shape[1],
             frame_height=current_frame.shape[0],
@@ -84,6 +93,10 @@ class VideoPlayer(abc.ABC):
             self._run_player_loop()
         finally:
             self.__exit__()
+
+    def crop_and_resize_frame(self, frame) -> np.ndarray:
+        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
+        return frame
 
     @abc.abstractmethod
     def _get_screen_size(self) -> Tuple[int, int]:
@@ -171,21 +184,7 @@ class VideoPlayer(abc.ABC):
         for callback in self._frame_edit_callbacks:
             if not callback.enabled:
                 continue
-            shape_before_edit = frame_to_display.shape[:2]
-            frame_to_display = callback.before_frame_resize(
-                video_player=self,
-                frame=frame_to_display,
-                frame_num=self._current_frame_num,
-                original_frame=original_frame,
-            )
-            assert frame_to_display.shape[:2] == shape_before_edit, "callbacks can not alter the frame's shape before resize"
-
-        frame_to_display = self._crop_and_resize_frame(frame_to_display)
-
-        for callback in self._frame_edit_callbacks:
-            if not callback.enabled:
-                continue
-            frame_to_display = callback.after_frame_resize(
+            frame_to_display = callback.edit_frame(
                 video_player=self,
                 frame=frame_to_display,
                 frame_num=self._current_frame_num,
@@ -206,10 +205,6 @@ class VideoPlayer(abc.ABC):
             self._change_current_frame_num(change_by=1)
             frame = self._create_frame_to_display()
             self._show_frame(frame)
-
-    def _crop_and_resize_frame(self, frame) -> np.ndarray:
-        frame = cv2.resize(frame, self._screen_adjusted_frame_size)
-        return frame
 
     def _change_current_frame_num(self, change_by: int) -> None:
         if change_by > 0 and self._current_frame_num == self._last_frame:

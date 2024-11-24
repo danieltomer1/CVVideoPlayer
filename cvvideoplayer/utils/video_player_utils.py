@@ -72,7 +72,7 @@ def hist_eq(img, max_value):
     return hist_eq_img
 
 
-def get_screen_adjusted_frame_size(screen_size, frame_width, frame_height):
+def calc_screen_adjusted_frame_size(screen_size, frame_width, frame_height):
     screen_w, screen_h = screen_size
     if screen_w is None:
         return frame_width, frame_height

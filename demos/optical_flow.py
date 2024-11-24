@@ -4,7 +4,12 @@ change_cwd_to_demos_dir()
 add_project_root_to_path()
 
 from cvvideoplayer import create_video_player
-from cvvideoplayer.frame_editors import FrameInfoOverlay, KeyMapOverlay, OpticalFlowPlotter
+from cvvideoplayer.frame_editors import (
+    FrameInfoOverlay,
+    KeyMapOverlay,
+    OpticalFlowPlotter,
+    FitFrameToScreen,
+)
 
 
 def run_player():
@@ -12,6 +17,7 @@ def run_player():
         video_source="../assets/example_video.mp4",
         record=True,
         frame_edit_callbacks=[
+            FitFrameToScreen(),
             FrameInfoOverlay(),
             KeyMapOverlay(),
             OpticalFlowPlotter(enable_by_default=True),

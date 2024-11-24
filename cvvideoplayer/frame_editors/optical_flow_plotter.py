@@ -23,7 +23,7 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def enabled(self):
         return self._enabled
 
-    def after_frame_resize(
+    def edit_frame(
         self,
         video_player: "VideoPlayer",
         frame: np.ndarray,

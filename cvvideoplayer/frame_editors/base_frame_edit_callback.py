@@ -24,10 +24,10 @@ class BaseFrameEditCallback:
 
     def teardown(self) -> None:
         """
-        Optionally define how the editor should close when video player is closed
+        Optionally define how the callback should close when the video player is closed
         """
 
-    def before_frame_resize(
+    def edit_frame(
             self,
             video_player: "VideoPlayer",
             frame: np.ndarray,
@@ -35,29 +35,7 @@ class BaseFrameEditCallback:
             original_frame: np.ndarray,
     ) -> np.ndarray:
         """
-        This function receives the frame before it has been resized and should return the frame
-        after it has been altered in any way desirable by the user. In this hook you ere not allowed to change the
-        frame's size.
-
-        Args:
-            video_player: an instance fo VideoPlayer
-            frame (): the frame to be edited and displayed
-            frame_num ():
-            original_frame () the frame before any alterations
-
-        Returns: the edited frame
-        """
-        return frame
-
-    def after_frame_resize(
-            self,
-            video_player: "VideoPlayer",
-            frame: np.ndarray,
-            frame_num: int,
-            original_frame: np.ndarray,
-    ) -> np.ndarray:
-        """
-        This function receives the frame after it has been resized to fit the screen size and should return the frame
+        This function receives the displayed frame and should return it
         after it has been altered in any way desirable by the user
 
         Args:
@@ -77,8 +55,8 @@ class BaseFrameEditCallback:
     def key_function_to_register(self) -> List[KeyFunction]:
         """
         Optionally return a list of KeyFunctions to be registered once the frame editor is added to the video player
-        Examples:
-            1. [
+        Example:
+            return [
                   KeyFunction(
                       key="ctrl+f",  # A standard key combination can be any combination of modifiers with a single key
                       func=self.enable_disable,  # A function that receives no input

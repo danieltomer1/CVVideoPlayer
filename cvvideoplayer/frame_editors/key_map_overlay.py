@@ -2,9 +2,9 @@ from typing import Tuple
 
 import numpy as np
 
-from ...utils.video_player_utils import KeyFunction
-from ...utils.drawing_utils import write_text_on_img
-from ..base_frame_edit_callback import BaseFrameEditCallback
+from ..utils.video_player_utils import KeyFunction
+from ..utils.drawing_utils import write_text_on_img
+from .base_frame_edit_callback import BaseFrameEditCallback
 
 
 class KeyMapOverlay(BaseFrameEditCallback):
@@ -28,7 +28,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
             KeyFunction(key="ctrl+k", func=self.enable_disable, description="Show/Hide key map"),
         ]
 
-    def after_frame_resize(self, video_player, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
+    def edit_frame(self, video_player, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
         row = self._tl_coordinate[0]
         write_text_on_img(
             frame,

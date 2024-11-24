@@ -1,8 +1,7 @@
 from pathlib import Path
 import cv2
 import numpy as np
-from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...video_players.base_video_player import VideoPlayer
+from .base_frame_edit_callback import BaseFrameEditCallback
 
 from typing import Tuple
 
@@ -18,7 +17,7 @@ class FrameSnapshot(BaseFrameEditCallback):
         self._output_shape = output_shape
         self._frame_num = frame_num
 
-    def before_frame_resize(self, frame: np.ndarray, frame_num: int, **kwargs):
+    def edit_frame(self, frame: np.ndarray, frame_num: int, **kwargs):
         if frame_num == self._frame_num:
             cv2.imwrite(str(self._output_video_path), cv2.resize(frame, self._output_shape))
             print(f"Saved frame {frame_num} to {self._output_video_path}")

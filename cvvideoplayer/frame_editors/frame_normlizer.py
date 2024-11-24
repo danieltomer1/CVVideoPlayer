@@ -2,8 +2,8 @@ from typing import Union
 
 import numpy as np
 
-from ..base_frame_edit_callback import BaseFrameEditCallback
-from ...utils.video_player_utils import KeyFunction
+from .base_frame_edit_callback import BaseFrameEditCallback
+from ..utils.video_player_utils import KeyFunction
 
 
 class FrameNormalizer(BaseFrameEditCallback):
@@ -32,7 +32,7 @@ class FrameNormalizer(BaseFrameEditCallback):
         else:
             raise ValueError(f"image must be either Uint8 or Uint16 but got {frame.dtype}")
 
-    def after_frame_resize(self, frame, **kwargs) -> np.ndarray:
+    def edit_frame(self, frame, **kwargs) -> np.ndarray:
 
         frame = frame.astype("float")
         frame /= self._norm_factor
