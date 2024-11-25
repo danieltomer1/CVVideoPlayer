@@ -6,7 +6,7 @@ with open("README.md", 'r') as f:
 
 setup(
     name="cvvideoplayer",
-    version="1.2.0",
+    version="1.2.1",
     author="Daniel Tomer",
     author_email="danieltomer1@gmail.com",
     description="moduler multi purpose video player for debugging algorithms in python",
