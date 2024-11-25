@@ -37,7 +37,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         self._original_frame_shape = None
 
     @abstractmethod
-    def get_bboxes(self, frame, frame_num) -> List[Bbox]:
+    def get_bboxes(self, edited_frame, original_frame, frame_num) -> List[Bbox]:
         pass
 
     @property
@@ -52,8 +52,12 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     def setup(self, video_player, frame) -> None:
         self._original_frame_shape = frame.shape
 
-    def edit_frame(self, frame, frame_num, **kwargs):
-        for bbox in self.get_bboxes(frame, frame_num):
+    def edit_frame(self, frame, frame_num, original_frame, **kwargs):
+        for bbox in self.get_bboxes(
+                edited_frame=frame,
+                original_frame=original_frame,
+                frame_num=frame_num,
+        ):
             norm_bbox = bbox.get_normalized_bbox(
                 frame_width=self._original_frame_shape[1],
                 frame_height=self._original_frame_shape[0],

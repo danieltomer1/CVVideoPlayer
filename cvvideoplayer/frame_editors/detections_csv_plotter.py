@@ -36,7 +36,7 @@ class DetectionsCsvPlotter(BaseBboxPlotter):
                 )
                 self._detections[int(row["frame_id"])].append(bbox)
 
-    def get_bboxes(self, frame, frame_num) -> t.List[Bbox]:
+    def get_bboxes(self, frame_num, **kwargs) -> t.List[Bbox]:
         return self._detections[frame_num]
 
     @property
