@@ -33,6 +33,7 @@ class DetectionsCsvPlotter(BaseBboxPlotter):
                     width=int(float(row["width"])),
                     height=int(float(row["height"])),
                     above_label=f"{row['label']} p: {float(row['score']):.2f}",
+                    color=self._default_bbox_color,
                 )
                 self._detections[int(row["frame_id"])].append(bbox)
 

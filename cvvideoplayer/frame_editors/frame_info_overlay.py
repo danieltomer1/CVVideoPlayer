@@ -16,11 +16,9 @@ class FrameInfoOverlay(BaseFrameEditCallback):
         top_left_coordinate: Tuple[int, int] = (10, 10),
     ):
         super().__init__(enable_by_default)
-        self._video_total_frame_num = None
         self._font_scale = font_scale
         self._font_thickness = font_thickness
         self._tl_coordinate = top_left_coordinate
-        self._orig_res = None
 
     @property
     def key_function_to_register(self):
@@ -28,14 +26,17 @@ class FrameInfoOverlay(BaseFrameEditCallback):
             KeyFunction(key="ctrl+f", func=self.enable_disable, description="Show/Hide frame info"),
         ]
 
-    def setup(self, video_player, frame) -> None:
-        self._video_total_frame_num = len(video_player.frame_reader)
-        self._orig_res = frame.shape
+    def edit_frame(
+            self,
+            video_player,
+            frame: np.ndarray,
+            frame_num: int,
+            original_frame: np.ndarray,
+    ) -> np.ndarray:
 
-    def edit_frame(self, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
         text = f"{frame_num}"
-        if self._video_total_frame_num is not None:
-            text += f"/{self._video_total_frame_num - 1}"
+        if len(video_player.frame_reader) is not None:
+            text += f"/{len(video_player.frame_reader) - 1}"
 
         line = write_text_on_img(
             frame,
@@ -48,7 +49,7 @@ class FrameInfoOverlay(BaseFrameEditCallback):
 
         write_text_on_img(
             frame,
-            f"{self._orig_res[1]}x{self._orig_res[0]}",
+            f"{original_frame.shape[1]}x{original_frame.shape[0]}",
             row=line,
             col=self._tl_coordinate[1],
             font_scale=self._font_scale / 1.5,

@@ -16,7 +16,6 @@ class FrameNormalizer(BaseFrameEditCallback):
         super().__init__(enable_by_default)
         self._range_min = range_min
         self._range_max = range_max
-        self._norm_factor = None
 
     @property
     def key_function_to_register(self):
@@ -24,22 +23,20 @@ class FrameNormalizer(BaseFrameEditCallback):
             KeyFunction(key="r", func=self._set_dynamic_range, description="Set dynamic range"),
         ]
 
-    def setup(self, frame, **kwargs) -> None:
+    def edit_frame(self, frame, **kwargs) -> np.ndarray:
         if frame.dtype == "uint8":
-            self._norm_factor = 2 ** 8 - 1
+            norm_factor = 2 ** 8 - 1
         elif frame.dtype == "uint16":
-            self._norm_factor = 2 ** 16 - 1
+            norm_factor = 2 ** 16 - 1
         else:
             raise ValueError(f"image must be either Uint8 or Uint16 but got {frame.dtype}")
 
-    def edit_frame(self, frame, **kwargs) -> np.ndarray:
-
         frame = frame.astype("float")
-        frame /= self._norm_factor
+        frame /= norm_factor
 
         if self._range_min or self._range_max:
-            norm_min = int(self._range_min) / self._norm_factor if self._range_min else 0
-            norm_max = int(self._range_max) / self._norm_factor if self._range_max else self._norm_factor
+            norm_min = int(self._range_min) / norm_factor if self._range_min else 0
+            norm_max = int(self._range_max) / norm_factor if self._range_max else norm_factor
             frame = (frame - norm_min) / (norm_max - norm_min)
             frame = np.clip(frame, 0, 1)
 

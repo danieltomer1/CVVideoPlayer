@@ -34,7 +34,6 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         self._default_bbox_color = default_bbox_color
         self._label_text_color = label_text_color
         self._label_filling_color = label_filling_color
-        self._original_frame_shape = None
 
     @abstractmethod
     def get_bboxes(self, edited_frame, original_frame, frame_num) -> List[Bbox]:
@@ -49,9 +48,6 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             KeyFunction(key="ctrl+u", func=lambda: self._change_font_size(-0.1), description="decrease label size"),
         ]
 
-    def setup(self, video_player, frame) -> None:
-        self._original_frame_shape = frame.shape
-
     def edit_frame(self, frame, frame_num, original_frame, **kwargs):
         for bbox in self.get_bboxes(
                 edited_frame=frame,
@@ -59,8 +55,8 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
                 frame_num=frame_num,
         ):
             norm_bbox = bbox.get_normalized_bbox(
-                frame_width=self._original_frame_shape[1],
-                frame_height=self._original_frame_shape[0],
+                frame_width=original_frame.shape[1],
+                frame_height=original_frame.shape[0],
                 bbox_format=BboxFormat.xywh,
             )
 
