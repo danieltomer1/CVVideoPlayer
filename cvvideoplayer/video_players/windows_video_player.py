@@ -5,6 +5,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from .double_frame_video_player import DoubleFrameVideoPlayer
 from ..utils.video_player_utils import KeyFunction
 from ..input_management.windows_input_parser import WindowsInputParser
 from ..utils.windows_os_utils import set_icon_windows
@@ -85,6 +86,43 @@ class WindowsVideoPlayer(VideoPlayer):
         ]
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
+
+    def _set_icon(self):
+        set_icon_windows(self._window_name, icon_path=Path(__file__).parent.parent / "icon.png")
+
+
+class WindowsDoubleFrameVideoPlayer(DoubleFrameVideoPlayer, WindowsVideoPlayer):
+    def __init__(self, **video_player_kwargs):
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        super().__init__(**video_player_kwargs)
+
+    def _show_frame(self, frame) -> None:
+        super()._show_frame(frame)
+        cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
+
+    @property
+    def _input_parser(self):
+        return WindowsInputParser()
+
+    def _get_screen_size(self):
+        user32 = ctypes.windll.user32
+        screensize = 0.9 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
+        return screensize
+
+    def _get_in_focus_window_id(self):
+        h_wnd = ctypes.windll.user32.GetForegroundWindow()
+        pid = ctypes.wintypes.DWORD()
+        ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+        return pid.value
+
+    def _get_player_window_id(self):
+        user32 = ctypes.windll.user32
+        user32.FindWindowW.argtypes = [LPCWSTR, LPCWSTR]
+        user32.FindWindowW.restype = HWND
+        h_wnd = user32.FindWindowW(None, self._window_name)
+        pid = ctypes.wintypes.DWORD()
+        ctypes.windll.user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+        return pid.value
 
     def _set_icon(self):
         set_icon_windows(self._window_name, icon_path=Path(__file__).parent.parent / "icon.png")

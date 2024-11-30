@@ -7,10 +7,10 @@ from ..frame_editors import BaseFrameEditCallback
 from ..utils.video_player_utils import SupportedOS, CURRENT_OS
 
 if CURRENT_OS == SupportedOS.LINUX:
-    from .linux_video_player import LinuxVideoPlayer
+    from .linux_video_player import LinuxVideoPlayer, LinuxDoubleFrameVideoPlayer
 
 elif CURRENT_OS == SupportedOS.WINDOWS:
-    from .windows_video_player import WindowsVideoPlayer
+    from .windows_video_player import WindowsVideoPlayer, WindowsDoubleFrameVideoPlayer
 
 
 def create_video_player(
@@ -18,6 +18,7 @@ def create_video_player(
         start_from_frame: int = 0,
         frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
         record: Union[bool, AbstractRecorder] = False,
+        double_frame_mode: bool = False,
 ) -> VideoPlayer:
     """
     Params:
@@ -30,10 +31,16 @@ def create_video_player(
     It can also be an instance of AbstractRecorder for custom recording functionality.
     """
     if CURRENT_OS == SupportedOS.WINDOWS:
-        video_player_class = WindowsVideoPlayer
+        if double_frame_mode:
+            video_player_class = WindowsDoubleFrameVideoPlayer
+        else:
+            video_player_class = WindowsVideoPlayer
 
     elif CURRENT_OS == SupportedOS.LINUX:
-        video_player_class = LinuxVideoPlayer
+        if double_frame_mode:
+            video_player_class = LinuxDoubleFrameVideoPlayer
+        else:
+            video_player_class = LinuxVideoPlayer
 
     else:
         raise ValueError(f"Unsupported OS: {CURRENT_OS}")
