@@ -2,7 +2,6 @@ from typing import Tuple
 
 import numpy as np
 
-from ..utils.video_player_utils import KeyFunction
 from ..utils.drawing_utils import write_text_on_img
 from .base_frame_edit_callback import BaseFrameEditCallback
 
@@ -11,22 +10,17 @@ class KeyMapOverlay(BaseFrameEditCallback):
     def __init__(
         self,
         enable_by_default: bool = True,
+        enable_disable_key: str = "ctrl+k",
         font_scale: float = 1,
         font_thickness: int = 1,
         font_color: Tuple[int, int, int] = (255, 255, 125),
         top_left_coordinate: Tuple[int, int] = (90, 10),
     ):
-        super().__init__(enable_by_default)
+        super().__init__(enable_by_default, enable_disable_key)
         self._font_scale = font_scale
         self._font_thickness = font_thickness
         self._font_color = font_color
         self._tl_coordinate = top_left_coordinate
-
-    @property
-    def key_function_to_register(self):
-        return [
-            KeyFunction(key="ctrl+k", func=self.enable_disable, description="Show/Hide key map"),
-        ]
 
     def edit_frame(self, video_player, frame: np.ndarray, frame_num: int, **kwargs) -> np.ndarray:
         row = self._tl_coordinate[0]

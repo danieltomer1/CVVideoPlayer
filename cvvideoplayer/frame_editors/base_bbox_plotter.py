@@ -16,6 +16,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
     def __init__(
         self,
         enable_by_default: bool = False,
+        enable_disable_key: str = None,
         show_above_bbox_label: bool = True,
         show_below_bbox_label: bool = True,
         default_bbox_color: Tuple[int, int, int] = (255, 0, 0),
@@ -25,7 +26,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
         label_text_color: Tuple[int, int, int] = (255, 255, 255),
         label_filling_color: Tuple[int, int, int] = (0, 0, 0),
     ):
-        super().__init__(enable_by_default)
+        super().__init__(enable_by_default, enable_disable_key)
         self._text_color = text_color
         self._font_scale = font_scale
         self._thickness = drawing_thickness
@@ -41,7 +42,7 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
 
     @property
     def key_function_to_register(self):
-        return [
+        return super().key_function_to_register + [
             KeyFunction(key="l", func=self._toggle_show_above_bbox_label, description="Show/Hide above label"),
             KeyFunction(key="b", func=self._toggle_show_below_bbox_label, description="Show/Hide below label"),
             KeyFunction(key="ctrl+i", func=lambda: self._change_font_size(0.1), description="increase label size"),

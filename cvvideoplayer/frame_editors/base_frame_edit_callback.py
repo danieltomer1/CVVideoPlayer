@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
 
 import numpy as np
 
@@ -10,8 +10,9 @@ if TYPE_CHECKING:
 
 class BaseFrameEditCallback:
 
-    def __init__(self, enable_by_default):
+    def __init__(self, enable_by_default, enable_disable_key: Optional[str]=None):
         self._enabled = enable_by_default
+        self._enable_disable_key = enable_disable_key
 
     @property
     def enabled(self):
@@ -69,4 +70,13 @@ class BaseFrameEditCallback:
                   )
               ]
         """
-        return []
+        if self._enable_disable_key is not None:
+            return [
+                KeyFunction(
+                    key=self._enable_disable_key,
+                    func=self.enable_disable,
+                    description=f"Enable/Disable {self.__class__.__name__}"
+                )
+            ]
+        else:
+            return []

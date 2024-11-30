@@ -5,18 +5,12 @@ from ..utils.video_player_utils import hist_eq, KeyFunction
 
 
 class HistogramEqualizer(BaseFrameEditCallback):
-    def __init__(self, enable_by_default: bool = False):
-        super().__init__(enable_by_default)
-
-    @property
-    def key_function_to_register(self):
-        return [
-            KeyFunction(
-                key="ctrl+h",
-                func=self.enable_disable,
-                description="Enable/Disable histogram equalization",
-            ),
-        ]
+    def __init__(
+            self,
+            enable_by_default: bool = False,
+            enable_disable_key: str = "ctrl+h"
+    ):
+        super().__init__(enable_by_default, enable_disable_key)
 
     def edit_frame(self, frame: np.ndarray, **kwargs) -> np.ndarray:
         if frame.dtype == "uint8":
