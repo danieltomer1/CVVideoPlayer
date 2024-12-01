@@ -13,6 +13,10 @@ class BboxPlottersCombiner(BaseBboxPlotter):
         super().__init__(enable_by_default=True, **bboxes_plotter_kwargs)
         self._bbox_plotters = bbox_plotters
 
+    def setup(self, **kwargs) -> None:
+        for bbox_plotter in self._bbox_plotters:
+            bbox_plotter.setup(**kwargs)
+
     @property
     def key_function_to_register(self):
         combined_key_dict = {}
