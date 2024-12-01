@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 
 from .base_video_player import VideoPlayer
+from ..display_managers.abstract_display_manager import DisplayManager
 from ..utils.video_player_utils import KeyFunction
 from ..frame_reader import FrameReader
 from ..recorder import AbstractRecorder
@@ -21,11 +22,13 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
     def __init__(
             self,
             video_source: Union[str, Path, FrameReader],
+            display_manager: DisplayManager,
             start_from_frame: int = 0,
             frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
             record: Union[bool, AbstractRecorder] = False,
     ):
         self._window_name = "CVvideoPlayer"
+        self._display_manager = display_manager
         self._current_side = "left"
         self._second_screen_callbacks = deepcopy(frame_edit_callbacks)
         self._second_input_handler = InputHandler(self._window_name)
@@ -35,6 +38,7 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
             start_from_frame=start_from_frame,
             frame_edit_callbacks=frame_edit_callbacks,
             record=record,
+            display_manager=display_manager
         )
 
     def _setup_callbacks(self):
@@ -78,7 +82,7 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
 
     def _run_player_loop(self):
         while not self._exit:
-            if self._get_in_focus_window_id() != self._window_id:
+            if self._display_manager.get_in_focus_window_id() != self._window_id:
                 self._input_parser.pause()
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break

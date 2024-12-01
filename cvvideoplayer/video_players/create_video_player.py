@@ -8,9 +8,11 @@ from ..utils.video_player_utils import SupportedOS, CURRENT_OS
 
 if CURRENT_OS == SupportedOS.LINUX:
     from .linux_video_player import LinuxVideoPlayer, LinuxDoubleFrameVideoPlayer
+    from ..display_managers.linux_display_manager import LinuxDisplayManager
 
 elif CURRENT_OS == SupportedOS.WINDOWS:
     from .windows_video_player import WindowsVideoPlayer, WindowsDoubleFrameVideoPlayer
+    from ..display_managers.windows_display_manager import WindowsDisplayManager
 
 
 def create_video_player(
@@ -31,12 +33,14 @@ def create_video_player(
     It can also be an instance of AbstractRecorder for custom recording functionality.
     """
     if CURRENT_OS == SupportedOS.WINDOWS:
+        display_manager = WindowsDisplayManager()
         if double_frame_mode:
             video_player_class = WindowsDoubleFrameVideoPlayer
         else:
             video_player_class = WindowsVideoPlayer
 
     elif CURRENT_OS == SupportedOS.LINUX:
+        display_manager = LinuxDisplayManager()
         if double_frame_mode:
             video_player_class = LinuxDoubleFrameVideoPlayer
         else:
@@ -50,23 +54,5 @@ def create_video_player(
         start_from_frame=start_from_frame,
         frame_edit_callbacks=frame_edit_callbacks,
         record=record,
+        display_manager=display_manager
     )
-
-
-class DeprecatedVideoPlayer:
-    def __init__(
-        self,
-        video_source: Union[str, Path, FrameReader],
-        start_from_frame: int = 0,
-        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
-        record: Union[bool, AbstractRecorder] = False,
-    ):
-        self._video_player = create_video_player(
-            video_source=video_source,
-            start_from_frame=start_from_frame,
-            frame_edit_callbacks=frame_edit_callbacks,
-            record=record,
-        )
-
-    def run(self) -> None:
-        self._video_player.run()
