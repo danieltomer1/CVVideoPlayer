@@ -1,7 +1,7 @@
 from typing import List
 
-from cvvideoplayer import Bbox
-from cvvideoplayer.frame_editors import BaseBboxPlotter
+from ..utils.bbox_utils import Bbox
+from ..frame_editors import BaseBboxPlotter
 
 
 class BboxPlottersCombiner(BaseBboxPlotter):
