@@ -87,6 +87,9 @@ class BaseInputParser(metaclass=Singleton):
         if str(key) == "<65437>":  # work around for a bug in pynput model that does not convert 5 for some reason
             key = "5"
 
+        if str(key) == "<65032>":  # work around for a bug in pynput model that does not release shift
+            key = "shift"
+
         if hasattr(key, "vk") and key.vk is not None:
             key_str = self._vk_code_mapper(key.vk).lower()
         else:

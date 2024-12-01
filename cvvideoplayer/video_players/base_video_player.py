@@ -1,12 +1,13 @@
 import abc
 from pathlib import Path
 from queue import Empty
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Union
 from functools import partial
 
 import cv2
 import numpy as np
 
+from ..display_managers.abstract_display_manager import DisplayManager
 from ..frame_editors import (
     BaseFrameEditCallback,
     FitFrameToScreen,
@@ -30,6 +31,7 @@ class VideoPlayer(abc.ABC):
     def __init__(
         self,
         video_source: Union[str, Path, FrameReader],
+        display_manager: DisplayManager,
         start_from_frame: int = 0,
         frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
         record: Union[bool, AbstractRecorder] = False,
@@ -45,6 +47,7 @@ class VideoPlayer(abc.ABC):
         It can also be an instance of AbstractRecorder for custom recording functionality.
         """
         self._window_name = "CVvideoPlayer"
+        self._display_manager = display_manager
         self.frame_reader = get_frame_reader(video_source)
         self.input_handler = InputHandler(self._window_name)
         self._recorder = get_recorder(record)
@@ -52,7 +55,7 @@ class VideoPlayer(abc.ABC):
         self._last_frame = len(self.frame_reader) - 1
         self._current_frame_num = start_from_frame
 
-        self._screen_size = self._get_screen_size()
+        self._screen_size = self._display_manager.get_screen_size()
         self._original_frame_size = None
 
         self._frame_edit_callbacks = frame_edit_callbacks
@@ -98,24 +101,6 @@ class VideoPlayer(abc.ABC):
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
 
-    @abc.abstractmethod
-    def _get_screen_size(self) -> Tuple[int, int]:
-        """
-        implemented per platform
-        """
-
-    @abc.abstractmethod
-    def _get_in_focus_window_id(self) -> int:
-        """
-        implemented per platform
-        """
-
-    @abc.abstractmethod
-    def _get_player_window_id(self) -> int:
-        """
-        implemented per platform
-        """
-
     @property
     @abc.abstractmethod
     def _input_parser(self) -> BaseInputParser:
@@ -123,15 +108,9 @@ class VideoPlayer(abc.ABC):
         implemented per platform
         """
 
-    @abc.abstractmethod
-    def _set_icon(self):
-        """
-        implemented per platform
-        """
-
     def _run_player_loop(self):
         while not self._exit:
-            if self._get_in_focus_window_id() != self._window_id:
+            if self._display_manager.get_in_focus_window_id() != self._window_id:
                 self._input_parser.pause()
                 if is_window_closed_by_mouse_click(window_name=self._window_name):
                     break
@@ -156,8 +135,8 @@ class VideoPlayer(abc.ABC):
     def _open_player(self) -> None:
         frame_for_display = self._create_frame_to_display()
         self._show_frame(frame_for_display)
-        self._window_id = self._get_player_window_id()
-        self._set_icon()
+        self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
+        self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
         cv2.pollKey()
 
     def _setup_callbacks(self):

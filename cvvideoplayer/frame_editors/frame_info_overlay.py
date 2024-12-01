@@ -3,7 +3,6 @@ from typing import Tuple
 import numpy as np
 
 from .base_frame_edit_callback import BaseFrameEditCallback
-from ..utils.video_player_utils import KeyFunction
 from ..utils.drawing_utils import write_text_on_img
 
 
@@ -11,20 +10,15 @@ class FrameInfoOverlay(BaseFrameEditCallback):
     def __init__(
         self,
         enable_by_default: bool = True,
+        enable_disable_key: str = "ctrl+f",
         font_scale: float = 2,
         font_thickness: int = 2,
         top_left_coordinate: Tuple[int, int] = (10, 10),
     ):
-        super().__init__(enable_by_default)
+        super().__init__(enable_by_default, enable_disable_key)
         self._font_scale = font_scale
         self._font_thickness = font_thickness
         self._tl_coordinate = top_left_coordinate
-
-    @property
-    def key_function_to_register(self):
-        return [
-            KeyFunction(key="ctrl+f", func=self.enable_disable, description="Show/Hide frame info"),
-        ]
 
     def edit_frame(
             self,

@@ -1,10 +1,7 @@
-from typing import List
-
 import numpy as np
 import cv2
 
 from . import BaseFrameEditCallback
-from ..utils.video_player_utils import KeyFunction
 
 
 class OpticalFlowPlotter(BaseFrameEditCallback):
@@ -12,16 +9,13 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
     def __init__(
         self,
         enable_by_default: bool,
+        enable_disable_key: str = "o",
         min_arrow_size_to_draw: float = 10.0,
         draw_every_n_arrow: int = 80,
     ):
-        super().__init__(enable_by_default)
+        super().__init__(enable_by_default, enable_disable_key)
         self._min_arrow_size_to_draw = min_arrow_size_to_draw
         self._draw_every_n_arrow = draw_every_n_arrow
-
-    @property
-    def enabled(self):
-        return self._enabled
 
     def edit_frame(
         self,
@@ -43,13 +37,6 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
         )
 
         return frame
-
-    def enable_disable(self):
-        self._enabled = not self._enabled
-
-    @property
-    def key_function_to_register(self) -> List[KeyFunction]:
-        return [KeyFunction("o", func=self.enable_disable, description="show optical flow")]
 
     def _create_optical_flow_arrows_image(self, optical_flow_image, frame):
         resize_factor = (np.array(frame.shape[:2]) / np.array(optical_flow_image.shape[:2]))
