@@ -10,10 +10,22 @@ if TYPE_CHECKING:
 
 class BaseFrameEditCallback:
 
-    def __init__(self, enable_by_default, enable_disable_key: Optional[str]=None):
+    def __init__(
+            self,
+            enable_by_default: bool,
+            enable_disable_key: Optional[str] = None,
+            additional_keyboard_shortcuts: Optional[List[KeyFunction]] = None
+    ):
         self._enabled = enable_by_default
         self._enable_disable_key = enable_disable_key
+        self._additional_keyboard_shortcuts = additional_keyboard_shortcuts
 
+    """
+    All implemented callbacks need to inherit this Base class
+    params:
+        enable_by_default (bool): If True enable the callback on video start
+        enable_disable_key (str): Optional keyboard shortcut to disable/enable the callback in runtime
+    """
     @property
     def enabled(self):
         return self._enabled
@@ -70,13 +82,14 @@ class BaseFrameEditCallback:
                   )
               ]
         """
+        key_function_list = []
         if self._enable_disable_key is not None:
-            return [
-                KeyFunction(
-                    key=self._enable_disable_key,
-                    func=self.enable_disable,
-                    description=f"Enable/Disable {self.__class__.__name__}"
-                )
-            ]
-        else:
-            return []
+            key_function_list.append(KeyFunction(
+                key=self._enable_disable_key,
+                func=self.enable_disable,
+                description=f"Enable/Disable {self.__class__.__name__}"
+            ))
+        if self._additional_keyboard_shortcuts is not None:
+            assert all([isinstance(item, KeyFunction) for item in self._additional_keyboard_shortcuts])
+            key_function_list.extend(self._additional_keyboard_shortcuts)
+        return key_function_list
