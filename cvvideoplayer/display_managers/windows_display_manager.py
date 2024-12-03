@@ -12,7 +12,7 @@ class WindowsDisplayManager(DisplayManager):
 
     def get_screen_size(self):
         user32 = ctypes.windll.user32
-        screensize = 0.9 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
+        screensize = 0.95 * user32.GetSystemMetrics(0), 0.9 * user32.GetSystemMetrics(1)
         return screensize
 
     def get_in_focus_window_id(self):

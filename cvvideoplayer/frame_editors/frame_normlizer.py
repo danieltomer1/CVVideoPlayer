@@ -25,9 +25,9 @@ class FrameNormalizer(BaseFrameEditCallback):
 
     def edit_frame(self, frame, **kwargs) -> np.ndarray:
         if frame.dtype == "uint8":
-            norm_factor = 2 ** 8 - 1
+            norm_factor = 2**8 - 1
         elif frame.dtype == "uint16":
-            norm_factor = 2 ** 16 - 1
+            norm_factor = 2**16 - 1
         else:
             raise ValueError(f"image must be either Uint8 or Uint16 but got {frame.dtype}")
 

@@ -22,7 +22,7 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
         video_player: "VideoPlayer",
         frame: np.ndarray,
         original_frame: np.ndarray,
-        frame_num: int
+        frame_num: int,
     ) -> np.ndarray:
 
         if frame_num == 0:
@@ -39,7 +39,7 @@ class OpticalFlowPlotter(BaseFrameEditCallback):
         return frame
 
     def _create_optical_flow_arrows_image(self, optical_flow_image, frame):
-        resize_factor = (np.array(frame.shape[:2]) / np.array(optical_flow_image.shape[:2]))
+        resize_factor = np.array(frame.shape[:2]) / np.array(optical_flow_image.shape[:2])
 
         # Get start and end coordinates of the optical flow
         flow_start = np.stack(np.meshgrid(range(optical_flow_image.shape[1]), range(optical_flow_image.shape[0])), 2)

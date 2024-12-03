@@ -11,10 +11,7 @@ from cvvideoplayer.utils.ui_utils import SingleInput, InputType
 
 def test_video_navigation():
     frame_reader = TestingFrameReader(video_len=70)
-    video_player = create_video_player(
-        video_source=frame_reader,
-        start_from_frame=5
-    )
+    video_player = create_video_player(video_source=frame_reader, start_from_frame=5)
     assert np.all(video_player._get_current_frame() == frame_reader.get_frame(5))
     video_player.input_handler.handle_input(SingleInput(InputType.KeyPress, "right"))
     assert np.all(video_player._get_current_frame() == frame_reader.get_frame(6))

@@ -51,9 +51,9 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
 
     def edit_frame(self, frame, frame_num, original_frame, **kwargs):
         for bbox in self.get_bboxes(
-                edited_frame=frame,
-                original_frame=original_frame,
-                frame_num=frame_num,
+            edited_frame=frame,
+            original_frame=original_frame,
+            frame_num=frame_num,
         ):
             norm_bbox = bbox.get_normalized_bbox(
                 frame_width=original_frame.shape[1],

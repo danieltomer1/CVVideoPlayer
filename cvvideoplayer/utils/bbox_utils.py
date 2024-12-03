@@ -44,10 +44,7 @@ class Bbox:
         return self.width * self.height
 
     def get_normalized_bbox(
-            self,
-            frame_width: int,
-            frame_height: int,
-            bbox_format: BboxFormat = BboxFormat.xywh
+        self, frame_width: int, frame_height: int, bbox_format: BboxFormat = BboxFormat.xywh
     ) -> Tuple[float, float, float, float]:
         frame_width = float(frame_width)
         frame_height = float(frame_height)
@@ -56,4 +53,9 @@ class Bbox:
         if bbox_format == BboxFormat.xyxy:
             return self.x1 / frame_width, self.y1 / frame_height, self.x2 / frame_width, self.y2 / frame_height
         if bbox_format == BboxFormat.xcycwh:
-            return self.x_center / frame_width, self.y_center / frame_height, self.width / frame_width, self.height / frame_height
+            return (
+                self.x_center / frame_width,
+                self.y_center / frame_height,
+                self.width / frame_width,
+                self.height / frame_height,
+            )

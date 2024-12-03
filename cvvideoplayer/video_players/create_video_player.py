@@ -2,25 +2,27 @@ from pathlib import Path
 from typing import Union, Optional, List
 
 from .base_video_player import VideoPlayer
+from .double_frame_video_player import DoubleFrameVideoPlayer
 from .. import FrameReader, AbstractRecorder
 from ..frame_editors import BaseFrameEditCallback
 from ..utils.video_player_utils import SupportedOS, CURRENT_OS
 
 if CURRENT_OS == SupportedOS.LINUX:
-    from .linux_video_player import LinuxVideoPlayer, LinuxDoubleFrameVideoPlayer
     from ..display_managers.linux_display_manager import LinuxDisplayManager
+    from ..input_management.linux_input_parser import LinuxInputParser
 
 elif CURRENT_OS == SupportedOS.WINDOWS:
     from .windows_video_player import WindowsVideoPlayer, WindowsDoubleFrameVideoPlayer
     from ..display_managers.windows_display_manager import WindowsDisplayManager
+    from ..input_management.windows_input_parser import WindowsInputParser
 
 
 def create_video_player(
-        video_source: Union[str, Path, FrameReader],
-        start_from_frame: int = 0,
-        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
-        record: Union[bool, AbstractRecorder] = False,
-        double_frame_mode: bool = False,
+    video_source: Union[str, Path, FrameReader],
+    start_from_frame: int = 0,
+    frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+    record: Union[bool, AbstractRecorder] = False,
+    double_frame_mode: bool = False,
 ) -> VideoPlayer:
     """
     Params:
@@ -34,6 +36,7 @@ def create_video_player(
     """
     if CURRENT_OS == SupportedOS.WINDOWS:
         display_manager = WindowsDisplayManager()
+        input_parser = WindowsInputParser()
         if double_frame_mode:
             video_player_class = WindowsDoubleFrameVideoPlayer
         else:
@@ -41,10 +44,11 @@ def create_video_player(
 
     elif CURRENT_OS == SupportedOS.LINUX:
         display_manager = LinuxDisplayManager()
+        input_parser = LinuxInputParser()
         if double_frame_mode:
-            video_player_class = LinuxDoubleFrameVideoPlayer
+            video_player_class = DoubleFrameVideoPlayer
         else:
-            video_player_class = LinuxVideoPlayer
+            video_player_class = VideoPlayer
 
     else:
         raise ValueError(f"Unsupported OS: {CURRENT_OS}")
@@ -54,5 +58,6 @@ def create_video_player(
         start_from_frame=start_from_frame,
         frame_edit_callbacks=frame_edit_callbacks,
         record=record,
-        display_manager=display_manager
+        display_manager=display_manager,
+        input_parser=input_parser
     )

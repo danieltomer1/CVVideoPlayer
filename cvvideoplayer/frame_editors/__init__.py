@@ -8,4 +8,3 @@ from .frame_info_overlay import FrameInfoOverlay
 from .histogram_equalizer import HistogramEqualizer
 from .frame_snapshot import FrameSnapshot
 from .fit_frame_to_screen import FitFrameToScreen
-from .bbox_plotters_combiner import BboxPlottersCombiner

@@ -17,6 +17,9 @@ class InputHandler:
         if key_function.description:
             self._keymap_description[callback_name].append((key_function.key, key_function.description))
 
+    def get_keymap(self):
+        return self._keymap
+
     def get_keymap_description(self) -> dict:
         return self._keymap_description
 
@@ -26,8 +29,10 @@ class InputHandler:
             return
         key_function_list = self._keymap[key]
         if len(key_function_list) <= index:
-            print(f"attempting to remove index={index} from the key functions registered to key={key}"
-                  f"the index is out of range")
+            print(
+                f"attempting to remove index={index} from the key functions registered to key={key}"
+                f"the index is out of range"
+            )
         del self._keymap[key][index]
 
     def handle_input(self, single_input: SingleInput) -> None:
