@@ -1,6 +1,10 @@
 <div align="center"><img src=https://github.com/user-attachments/assets/88f4e3af-0fd3-41dc-9515-85a58dfdf2fc width="250"></div>
 
-<div align="center"><video src=https://github.com/user-attachments/assets/426e3880-7d18-4930-931a-12e2627c29fc></div>
+
+
+<div align="center"><video src=https://github.com/user-attachments/assets/4ff135d7-6b7c-4101-9c26-bd1ceb89bba8></video></div>
+
+
 
 ## Introduction
 CV video player is a Python-based customizable video player that helps computer vision practitioners
