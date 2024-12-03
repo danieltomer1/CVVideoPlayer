@@ -20,12 +20,12 @@ from ..utils.video_player_utils import is_window_closed_by_mouse_click, calc_scr
 
 class DoubleFrameVideoPlayer(VideoPlayer, ABC):
     def __init__(
-            self,
-            video_source: Union[str, Path, FrameReader],
-            display_manager: DisplayManager,
-            start_from_frame: int = 0,
-            frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
-            record: Union[bool, AbstractRecorder] = False,
+        self,
+        video_source: Union[str, Path, FrameReader],
+        display_manager: DisplayManager,
+        start_from_frame: int = 0,
+        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+        record: Union[bool, AbstractRecorder] = False,
     ):
         self._window_name = "CVvideoPlayer"
         self._display_manager = display_manager
@@ -46,7 +46,7 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
             start_from_frame=start_from_frame,
             frame_edit_callbacks=frame_edit_callbacks,
             record=record,
-            display_manager=display_manager
+            display_manager=display_manager,
         )
 
     def _setup_callbacks(self):
@@ -117,11 +117,13 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
                 original_frame=original_frame,
             )
 
-        double_frame = np.hstack((
-            frame_1_to_display,
-            np.zeros((frame_1_to_display.shape[0], self._border_size, 3), dtype=np.uint8),
-            frame_2_to_display
-        ))
+        double_frame = np.hstack(
+            (
+                frame_1_to_display,
+                np.zeros((frame_1_to_display.shape[0], self._border_size, 3), dtype=np.uint8),
+                frame_2_to_display,
+            )
+        )
 
         screen_adjusted_frame_size = calc_screen_adjusted_frame_size(
             screen_size=self._screen_size,

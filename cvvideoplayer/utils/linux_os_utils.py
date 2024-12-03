@@ -29,7 +29,7 @@ def set_icon_linux(window_id, display, icon_path):
                 icon_data.append(rgba_to_uint32(r, g, b, a))
 
         # Get the _NET_WM_ICON atom
-        _NET_WM_ICON = display.intern_atom('_NET_WM_ICON')
+        _NET_WM_ICON = display.intern_atom("_NET_WM_ICON")
 
         # Convert the list to a format Xlib can handle
         data = (height * width + 2) * [0]
@@ -37,7 +37,7 @@ def set_icon_linux(window_id, display, icon_path):
             data[i] = icon_data[i]
 
         # Set the property
-        window = display.create_resource_object('window', window_id)
+        window = display.create_resource_object("window", window_id)
         window.change_property(_NET_WM_ICON, Xlib.Xatom.CARDINAL, 32, data)
 
         # Flush the changes

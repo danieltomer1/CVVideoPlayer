@@ -63,7 +63,7 @@ def hist_eq(img, max_value):
     cdf_m = np.ma.masked_equal(cdf, 0)  # Find the minimum histogram value (excluding 0)
     cdf_m = (cdf_m - cdf_m.min()) * max_value / (cdf_m.max() - cdf_m.min())
     if max_value == 255:
-        cdf = np.ma.filled(cdf_m, 0,).astype("uint8")
+        cdf = np.ma.filled(cdf_m, 0).astype("uint8")
     else:
         cdf = np.ma.filled(cdf_m, 0).astype("uint16")
 

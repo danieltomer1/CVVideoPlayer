@@ -21,11 +21,11 @@ class FrameInfoOverlay(BaseFrameEditCallback):
         self._tl_coordinate = top_left_coordinate
 
     def edit_frame(
-            self,
-            video_player,
-            frame: np.ndarray,
-            frame_num: int,
-            original_frame: np.ndarray,
+        self,
+        video_player,
+        frame: np.ndarray,
+        frame_num: int,
+        original_frame: np.ndarray,
     ) -> np.ndarray:
 
         text = f"{frame_num}"

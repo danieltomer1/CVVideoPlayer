@@ -13,4 +13,3 @@ class LinuxDoubleFrameVideoPlayer(DoubleFrameVideoPlayer):
     @property
     def _input_parser(self):
         return LinuxInputParser()
-

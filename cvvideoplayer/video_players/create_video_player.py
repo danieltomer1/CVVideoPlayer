@@ -16,11 +16,11 @@ elif CURRENT_OS == SupportedOS.WINDOWS:
 
 
 def create_video_player(
-        video_source: Union[str, Path, FrameReader],
-        start_from_frame: int = 0,
-        frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
-        record: Union[bool, AbstractRecorder] = False,
-        double_frame_mode: bool = False,
+    video_source: Union[str, Path, FrameReader],
+    start_from_frame: int = 0,
+    frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
+    record: Union[bool, AbstractRecorder] = False,
+    double_frame_mode: bool = False,
 ) -> VideoPlayer:
     """
     Params:
@@ -54,5 +54,5 @@ def create_video_player(
         start_from_frame=start_from_frame,
         frame_edit_callbacks=frame_edit_callbacks,
         record=record,
-        display_manager=display_manager
+        display_manager=display_manager,
     )

@@ -1,7 +1,6 @@
-
 from setuptools import setup, find_packages
 
-with open("README.md", 'r') as f:
+with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
@@ -24,20 +23,20 @@ setup(
         "pynput",
         "matplotlib",
         "python-xlib;platform_system=='Linux'",
-        "pywin32;platform_system=='Windows'"
+        "pywin32;platform_system=='Windows'",
     ],
     python_requires=">=3.8",
     project_urls={
         "Homepage": "https://github.com/danieltomer1/CVVideoPlayer",
     },
     keywords=[
-        'opencv',
-        'video',
-        'player',
-        'video player',
-        'cvvideoplayer',
-        'computer vision',
-        'image processing',
-        'customizable'
-    ]
+        "opencv",
+        "video",
+        "player",
+        "video player",
+        "cvvideoplayer",
+        "computer vision",
+        "image processing",
+        "customizable",
+    ],
 )

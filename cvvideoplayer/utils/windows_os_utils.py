@@ -23,26 +23,17 @@ def set_icon_windows(window_name, icon_path):
 
         # Create temporary .ico file
         ico_path = "icon.ico"
-        img.save(ico_path, format='ICO')
+        img.save(ico_path, format="ICO")
 
         # Get the window handle
         hwnd = win32gui.FindWindow(None, window_name)
 
         if hwnd:
             # Set the icon
-            icon = win32gui.LoadImage(
-                0, ico_path, win32con.IMAGE_ICON,
-                0, 0, win32con.LR_LOADFROMFILE
-            )
+            icon = win32gui.LoadImage(0, ico_path, win32con.IMAGE_ICON, 0, 0, win32con.LR_LOADFROMFILE)
             # Set both small and big icons
-            win32api.SendMessage(
-                hwnd, win32con.WM_SETICON,
-                win32con.ICON_SMALL, icon
-            )
-            win32api.SendMessage(
-                hwnd, win32con.WM_SETICON,
-                win32con.ICON_BIG, icon
-            )
+            win32api.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_SMALL, icon)
+            win32api.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_BIG, icon)
 
         os.remove(ico_path)
     except Exception:

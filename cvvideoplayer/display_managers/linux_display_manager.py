@@ -24,10 +24,10 @@ class LinuxDisplayManager(DisplayManager):
         root = self._display.screen().root
 
         # Get all the window IDs on the current display
-        window_ids = root.get_full_property(self._display.intern_atom('_NET_CLIENT_LIST'), X.AnyPropertyType).value
+        window_ids = root.get_full_property(self._display.intern_atom("_NET_CLIENT_LIST"), X.AnyPropertyType).value
         for window_id in window_ids:
             # Get the window object
-            window = self._display.create_resource_object('window', window_id)
+            window = self._display.create_resource_object("window", window_id)
 
             # Get the window name
             name = window.get_wm_name()

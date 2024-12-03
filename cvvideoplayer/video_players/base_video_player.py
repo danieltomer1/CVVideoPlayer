@@ -224,6 +224,3 @@ class VideoPlayer(abc.ABC):
 
         for key_function in default_key_functions:
             self.input_handler.register_key_function(key_function, "Video Control")
-
-
-
