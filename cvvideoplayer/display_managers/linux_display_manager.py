@@ -39,7 +39,7 @@ class LinuxDisplayManager(DisplayManager):
             subprocess.check_output('xrandr | grep "\*" | cut -d" " -f4', shell=True).decode().strip().split("\n")[0]
         )
         screen_w, screen_h = screen_size_str.split("x")
-        screen_w = 0.85 * int(screen_w)
+        screen_w = 0.95 * int(screen_w)
         screen_h = 0.85 * int(screen_h)
         return screen_w, screen_h
 

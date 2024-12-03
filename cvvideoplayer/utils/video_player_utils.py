@@ -31,7 +31,7 @@ def get_frame_reader(video_source):
         if path.is_file():
             frame_reader = LocalVideoFileReader(video_source)
         elif path.is_dir():
-            frame_reader = LocalDirReader
+            frame_reader = LocalDirReader(video_source)
         else:
             raise IOError(f"{video_source} not found")
     elif isinstance(video_source, FrameReader):

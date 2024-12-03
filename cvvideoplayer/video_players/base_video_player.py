@@ -129,11 +129,13 @@ class VideoPlayer(abc.ABC):
             if self._play:
                 self._play_continuously()
             else:
-                frame_for_display = self._create_frame_to_display()
+                frame = self._get_current_frame()
+                frame_for_display = self._create_frame_to_display(original_frame=frame)
                 self._show_frame(frame_for_display)
 
     def _open_player(self) -> None:
-        frame_for_display = self._create_frame_to_display()
+        frame = self._get_current_frame()
+        frame_for_display = self._create_frame_to_display(original_frame=frame)
         self._show_frame(frame_for_display)
         self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
         self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
@@ -156,8 +158,7 @@ class VideoPlayer(abc.ABC):
 
             callback.setup(video_player=self, frame=self._get_current_frame())
 
-    def _create_frame_to_display(self) -> np.ndarray:
-        original_frame = self._get_current_frame()
+    def _create_frame_to_display(self, original_frame) -> np.ndarray:
         frame_to_display = original_frame.copy()
 
         for callback in self._frame_edit_callbacks:
@@ -182,8 +183,9 @@ class VideoPlayer(abc.ABC):
     def _play_continuously(self) -> None:
         while (not self._input_parser.has_input()) and self._play and not self._exit:
             self._change_current_frame_num(change_by=1)
-            frame = self._create_frame_to_display()
-            self._show_frame(frame)
+            frame = self._get_current_frame()
+            frame_to_display = self._create_frame_to_display(original_frame=frame)
+            self._show_frame(frame_to_display)
 
     def _change_current_frame_num(self, change_by: int) -> None:
         if change_by > 0 and self._current_frame_num == self._last_frame:

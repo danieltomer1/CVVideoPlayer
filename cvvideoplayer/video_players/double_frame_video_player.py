@@ -13,7 +13,7 @@ from ..display_managers.abstract_display_manager import DisplayManager
 from ..utils.video_player_utils import KeyFunction
 from ..frame_reader import FrameReader
 from ..recorder import AbstractRecorder
-from ..frame_editors import BaseFrameEditCallback
+from ..frame_editors import BaseFrameEditCallback, FitFrameToScreen, FrameInfoOverlay, KeyMapOverlay
 from ..input_management.input_handler import InputHandler
 from ..utils.video_player_utils import is_window_closed_by_mouse_click, calc_screen_adjusted_frame_size
 
@@ -31,6 +31,14 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
         self._display_manager = display_manager
         self._current_side = "left"
         self._second_screen_callbacks = deepcopy(frame_edit_callbacks)
+
+        if self._second_screen_callbacks is None:
+            self._second_screen_callbacks = [
+                FitFrameToScreen(),
+                FrameInfoOverlay(),
+                KeyMapOverlay(),
+            ]
+
         self._second_input_handler = InputHandler(self._window_name)
         self._border_size = 10
         super().__init__(
@@ -54,20 +62,6 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
 
     def _add_default_key_functions(self) -> None:
         super()._add_default_key_functions()
-        default_key_functions = [
-            KeyFunction("space", self._play_pause, "Play/Pause video"),
-            KeyFunction("right", partial(self._pause_and_change_current_frame, 1), "Next frame"),
-            KeyFunction("left", partial(self._pause_and_change_current_frame, -1), "Previous frame"),
-            KeyFunction("ctrl+right", partial(self._pause_and_change_current_frame, 10), "10 frames forward"),
-            KeyFunction("ctrl+left", partial(self._pause_and_change_current_frame, -10), "10 frames back"),
-            KeyFunction("ctrl+shift+right", partial(self._pause_and_change_current_frame, 50), "50 frames forward"),
-            KeyFunction("ctrl+shift+left", partial(self._pause_and_change_current_frame, -50), "50 frames back"),
-            KeyFunction("esc", self._set_exit_to_true, "Exit gracefully"),
-        ]
-
-        for key_function in default_key_functions:
-            self._second_input_handler.register_key_function(key_function, "Video Control")
-
         additional_key_functions = [
             KeyFunction("ctrl+1", partial(self._set_current_side, "left"), "set focus to left frame"),
             KeyFunction("ctrl+2", partial(self._set_current_side, "right"), "set focus to right frame"),
@@ -75,7 +69,8 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
 
         for key_function in additional_key_functions:
             self.input_handler.register_key_function(key_function, "Video Control")
-            self._second_input_handler.register_key_function(key_function, "Video Control")
+
+        self._second_input_handler._keymap = self.input_handler.get_keymap().copy()
 
     def _set_current_side(self, side):
         self._current_side = side
@@ -104,12 +99,12 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
             if self._play:
                 self._play_continuously()
             else:
-                frame_for_display = self._create_frame_to_display()
+                frame = self._get_current_frame()
+                frame_for_display = self._create_frame_to_display(original_frame=frame)
                 self._show_frame(frame_for_display)
 
-    def _create_frame_to_display(self) -> np.ndarray:
-        original_frame = self._get_current_frame()
-        frame_1_to_display = super()._create_frame_to_display()
+    def _create_frame_to_display(self, original_frame) -> np.ndarray:
+        frame_1_to_display = super()._create_frame_to_display(original_frame=original_frame)
         frame_2_to_display = original_frame.copy()
 
         for callback in self._second_screen_callbacks:
