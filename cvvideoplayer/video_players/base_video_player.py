@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 from queue import Empty
 from typing import Optional, List, Union
 from functools import partial
@@ -78,6 +79,7 @@ class VideoPlayer:
             frame_width=current_frame.shape[1],
             frame_height=current_frame.shape[0],
         )
+        self.last_key_press_event = (None, None)
 
     def __enter__(self):
         return self
@@ -124,6 +126,7 @@ class VideoPlayer:
                 if single_input is None:
                     continue
 
+            self.last_key_press_event = (single_input, time.time())
             self.input_handler.handle_input(single_input)
 
             if self._play:
@@ -144,7 +147,7 @@ class VideoPlayer:
         try:
             return self._input_parser.get_input()
         except Empty:
-            cv2.pollKey()
+            self._show_current_frame()
             return None
 
     def _setup_callbacks(self):

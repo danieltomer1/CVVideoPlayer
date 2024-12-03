@@ -93,6 +93,8 @@ class DoubleFrameVideoPlayer(VideoPlayer):
                 if single_input is None:
                     continue
 
+            self.last_key_press_event = (single_input, time.time())
+
             if self._current_side == "left":
                 self.input_handler.handle_input(single_input)
             elif self._current_side == "right":

@@ -64,7 +64,7 @@ class KeyMapOverlay(BaseFrameEditCallback):
                     frame,
                     f": {desc}",
                     row=row,
-                    col=self._tl_coordinate[1] + 150,
+                    col=self._tl_coordinate[1] + int(150 * self._font_scale),
                     font_scale=self._font_scale,
                     thickness=self._font_thickness,
                     color=self._font_color,
