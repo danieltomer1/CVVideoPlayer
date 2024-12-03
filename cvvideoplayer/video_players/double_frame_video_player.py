@@ -1,4 +1,3 @@
-from abc import ABC
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
@@ -10,6 +9,7 @@ import numpy as np
 
 from .base_video_player import VideoPlayer
 from ..display_managers.abstract_display_manager import DisplayManager
+from ..input_management.base_input_parser import BaseInputParser
 from ..utils.video_player_utils import KeyFunction
 from ..frame_reader import FrameReader
 from ..recorder import AbstractRecorder
@@ -18,17 +18,17 @@ from ..input_management.input_handler import InputHandler
 from ..utils.video_player_utils import is_window_closed_by_mouse_click, calc_screen_adjusted_frame_size
 
 
-class DoubleFrameVideoPlayer(VideoPlayer, ABC):
+class DoubleFrameVideoPlayer(VideoPlayer):
     def __init__(
         self,
         video_source: Union[str, Path, FrameReader],
         display_manager: DisplayManager,
+        input_parser: BaseInputParser,
         start_from_frame: int = 0,
         frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
         record: Union[bool, AbstractRecorder] = False,
     ):
         self._window_name = "CVvideoPlayer"
-        self._display_manager = display_manager
         self._current_side = "left"
         self._second_screen_callbacks = deepcopy(frame_edit_callbacks)
 
@@ -47,6 +47,7 @@ class DoubleFrameVideoPlayer(VideoPlayer, ABC):
             frame_edit_callbacks=frame_edit_callbacks,
             record=record,
             display_manager=display_manager,
+            input_parser=input_parser,
         )
 
     def _setup_callbacks(self):

@@ -3,7 +3,6 @@ import numpy as np
 
 from .double_frame_video_player import DoubleFrameVideoPlayer
 from ..utils.video_player_utils import KeyFunction
-from ..input_management.windows_input_parser import WindowsInputParser
 from .base_video_player import VideoPlayer
 
 
@@ -24,10 +23,6 @@ class WindowsVideoPlayer(VideoPlayer):
     def _show_frame(self, frame) -> None:
         super()._show_frame(frame)
         cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
-
-    @property
-    def _input_parser(self):
-        return WindowsInputParser()
 
     def _add_default_key_functions(self) -> None:
         super()._add_default_key_functions()
@@ -62,11 +57,7 @@ class WindowsVideoPlayer(VideoPlayer):
         return frame
 
 
-class WindowsDoubleFrameVideoPlayer(DoubleFrameVideoPlayer, WindowsVideoPlayer):
+class WindowsDoubleFrameVideoPlayer(DoubleFrameVideoPlayer):
     def _show_frame(self, frame) -> None:
         super()._show_frame(frame)
         cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
-
-    @property
-    def _input_parser(self):
-        return WindowsInputParser()

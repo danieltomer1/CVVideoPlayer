@@ -1,4 +1,3 @@
-import abc
 from pathlib import Path
 from queue import Empty
 from typing import Optional, List, Union
@@ -27,11 +26,12 @@ from ..utils.video_player_utils import (
 )
 
 
-class VideoPlayer(abc.ABC):
+class VideoPlayer:
     def __init__(
         self,
         video_source: Union[str, Path, FrameReader],
         display_manager: DisplayManager,
+        input_parser: BaseInputParser,
         start_from_frame: int = 0,
         frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
         record: Union[bool, AbstractRecorder] = False,
@@ -48,6 +48,7 @@ class VideoPlayer(abc.ABC):
         """
         self._window_name = "CVvideoPlayer"
         self._display_manager = display_manager
+        self._input_parser = input_parser
         self.frame_reader = get_frame_reader(video_source)
         self.input_handler = InputHandler(self._window_name)
         self._recorder = get_recorder(record)
@@ -100,13 +101,6 @@ class VideoPlayer(abc.ABC):
     def crop_and_resize_frame(self, frame) -> np.ndarray:
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
-
-    @property
-    @abc.abstractmethod
-    def _input_parser(self) -> BaseInputParser:
-        """
-        implemented per platform
-        """
 
     def _run_player_loop(self):
         while not self._exit:
