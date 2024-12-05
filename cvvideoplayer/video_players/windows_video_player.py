@@ -6,6 +6,15 @@ from ..utils.video_player_utils import KeyFunction
 from .base_video_player import VideoPlayer
 
 
+def windows_rendering_fix(cls):
+    class Wrapper(cls):
+        def _show_frame(self, frame) -> None:
+            super()._show_frame(frame)
+            cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
+    return Wrapper
+
+
+@windows_rendering_fix
 class WindowsVideoPlayer(VideoPlayer):
     def __init__(self, **video_player_kwargs):
         super().__init__(**video_player_kwargs)
@@ -19,10 +28,6 @@ class WindowsVideoPlayer(VideoPlayer):
             self._original_frame_size[0],
             self._original_frame_size[1],
         )
-
-    def _show_frame(self, frame) -> None:
-        super()._show_frame(frame)
-        cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
 
     def _add_default_key_functions(self) -> None:
         super()._add_default_key_functions()
@@ -57,7 +62,6 @@ class WindowsVideoPlayer(VideoPlayer):
         return frame
 
 
+@windows_rendering_fix
 class WindowsDoubleFrameVideoPlayer(DoubleFrameVideoPlayer):
-    def _show_frame(self, frame) -> None:
-        super()._show_frame(frame)
-        cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
+    ...

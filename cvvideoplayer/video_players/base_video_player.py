@@ -22,7 +22,7 @@ from ..utils.video_player_utils import (
     KeyFunction,
     is_window_closed_by_mouse_click,
     get_frame_reader,
-    get_recorder,
+    get_recorder, WindowStatus,
 )
 
 
@@ -69,7 +69,7 @@ class VideoPlayer:
 
         self._play = False
         self._exit = False
-        self._add_default_key_functions()
+        self._add_video_control_key_functions()
         self._setup_callbacks()
 
         current_frame = self._get_current_frame()
@@ -98,42 +98,54 @@ class VideoPlayer:
         finally:
             self.__exit__()
 
+    def _open_player(self) -> None:
+        cv2.namedWindow(self._window_name, flags=cv2.WINDOW_FULLSCREEN)
+        self._show_current_frame()
+        self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
+        self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
+        cv2.pollKey()
+
     def crop_and_resize_frame(self, frame) -> np.ndarray:
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
 
     def _run_player_loop(self):
         while not self._exit:
-            if self._display_manager.get_in_focus_window_id() != self._window_id:
+            window_status = self._get_window_status()
+            if window_status == WindowStatus.closed:
+                break
+            elif window_status == WindowStatus.out_of_focus:
                 self._input_parser.pause()
-                if is_window_closed_by_mouse_click(window_name=self._window_name):
-                    break
-                else:
-                    cv2.pollKey()
-                    continue
-            self._input_parser.resume()
-            try:
-                single_input = self._input_parser.get_input()
-            except Empty:
                 cv2.pollKey()
                 continue
+            else:
+                self._input_parser.resume()
+                single_input = self._get_user_input()
+                if single_input is None:
+                    continue
 
             self.input_handler.handle_input(single_input)
 
             if self._play:
                 self._play_continuously()
             else:
-                frame = self._get_current_frame()
-                frame_for_display = self._create_frame_to_display(original_frame=frame)
-                self._show_frame(frame_for_display)
+                self._show_current_frame()
 
-    def _open_player(self) -> None:
-        frame = self._get_current_frame()
-        frame_for_display = self._create_frame_to_display(original_frame=frame)
-        self._show_frame(frame_for_display)
-        self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
-        self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
-        cv2.pollKey()
+    def _get_window_status(self) -> WindowStatus:
+        if self._display_manager.get_in_focus_window_id() != self._window_id:
+            if is_window_closed_by_mouse_click(window_name=self._window_name):
+                return WindowStatus.closed
+            else:
+                return WindowStatus.out_of_focus
+        else:
+            return WindowStatus.in_focus
+
+    def _get_user_input(self):
+        try:
+            return self._input_parser.get_input()
+        except Empty:
+            cv2.pollKey()
+            return None
 
     def _setup_callbacks(self):
         for callback in self._frame_edit_callbacks:
@@ -152,7 +164,12 @@ class VideoPlayer:
 
             callback.setup(video_player=self, frame=self._get_current_frame())
 
-    def _create_frame_to_display(self, original_frame) -> np.ndarray:
+    def _show_current_frame(self, record_frame=True):
+        frame = self._get_current_frame()
+        frame_for_display = self._create_frame_to_display(frame, record_frame=record_frame)
+        self._show_frame(frame_for_display)
+
+    def _create_frame_to_display(self, original_frame, record_frame) -> np.ndarray:
         frame_to_display = original_frame.copy()
 
         for callback in self._frame_edit_callbacks:
@@ -165,7 +182,7 @@ class VideoPlayer:
                 original_frame=original_frame,
             )
 
-        if self._recorder is not None:
+        if record_frame and self._recorder is not None:
             self._recorder.write_frame_to_video(self, frame_to_display, self._current_frame_num)
 
         return frame_to_display
@@ -177,9 +194,7 @@ class VideoPlayer:
     def _play_continuously(self) -> None:
         while (not self._input_parser.has_input()) and self._play and not self._exit:
             self._change_current_frame_num(change_by=1)
-            frame = self._get_current_frame()
-            frame_to_display = self._create_frame_to_display(original_frame=frame)
-            self._show_frame(frame_to_display)
+            self._show_current_frame()
 
     def _change_current_frame_num(self, change_by: int) -> None:
         if change_by > 0 and self._current_frame_num == self._last_frame:
@@ -204,7 +219,12 @@ class VideoPlayer:
     def _set_exit_to_true(self):
         self._exit = True
 
-    def _add_default_key_functions(self) -> None:
+    def _add_video_control_key_functions(self) -> None:
+        for key_function in self.video_control_key_functions:
+            self.input_handler.register_key_function(key_function, "Video Control")
+
+    @property
+    def video_control_key_functions(self) -> List[KeyFunction]:
         default_key_functions = [
             KeyFunction("space", self._play_pause, "Play/Pause video"),
             KeyFunction("right", partial(self._pause_and_change_current_frame, 1), "Next frame"),
@@ -215,6 +235,4 @@ class VideoPlayer:
             KeyFunction("ctrl+shift+left", partial(self._pause_and_change_current_frame, -50), "50 frames back"),
             KeyFunction("esc", self._set_exit_to_true, "Exit gracefully"),
         ]
-
-        for key_function in default_key_functions:
-            self.input_handler.register_key_function(key_function, "Video Control")
+        return default_key_functions
