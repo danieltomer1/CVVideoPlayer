@@ -23,6 +23,7 @@ def create_video_player(
     frame_edit_callbacks: Optional[List[BaseFrameEditCallback]] = None,
     record: Union[bool, AbstractRecorder] = False,
     double_frame_mode: bool = False,
+    right_screen_callbacks: Optional[List[BaseFrameEditCallback]] = None,
 ) -> VideoPlayer:
     """
     Params:
@@ -33,31 +34,55 @@ def create_video_player(
      Each callback must be an instance of BaseFrameEditCallback.
     - record : Union[bool, AbstractRecorder], optional Whether to record the video or not (default is False).
     It can also be an instance of AbstractRecorder for custom recording functionality.
+    - double_frame_mode: bool, optional Whether to double the video for comparison (default is False).
+    - right_screen_callbacks : list, optional A list of frame editing callbacks for the second screen in double frame
+                               if None the list will be the same for both sides.
     """
+    video_player_kwargs = {
+        "video_source": video_source,
+        "start_from_frame": start_from_frame,
+        "record": record,
+    }
+
     if CURRENT_OS == SupportedOS.WINDOWS:
         display_manager = WindowsDisplayManager()
         input_parser = WindowsInputParser()
         if double_frame_mode:
-            video_player_class = WindowsDoubleFrameVideoPlayer
+            video_player = WindowsDoubleFrameVideoPlayer(
+                **video_player_kwargs,
+                display_manager=display_manager,
+                input_parser=input_parser,
+                left_frame_callbacks=frame_edit_callbacks,
+                right_frame_callbacks=right_screen_callbacks,
+            )
         else:
-            video_player_class = WindowsVideoPlayer
+            video_player = WindowsVideoPlayer(
+                **video_player_kwargs,
+                display_manager=display_manager,
+                input_parser=input_parser,
+                frame_edit_callbacks=frame_edit_callbacks,
+            )
 
     elif CURRENT_OS == SupportedOS.LINUX:
         display_manager = LinuxDisplayManager()
         input_parser = LinuxInputParser()
         if double_frame_mode:
-            video_player_class = DoubleFrameVideoPlayer
+            video_player = DoubleFrameVideoPlayer(
+                **video_player_kwargs,
+                display_manager=display_manager,
+                input_parser=input_parser,
+                right_frame_callbacks=right_screen_callbacks,
+                left_frame_callbacks=frame_edit_callbacks,
+            )
         else:
-            video_player_class = VideoPlayer
+            video_player = VideoPlayer(
+                **video_player_kwargs,
+                display_manager=display_manager,
+                input_parser=input_parser,
+                frame_edit_callbacks=frame_edit_callbacks
+            )
 
     else:
         raise ValueError(f"Unsupported OS: {CURRENT_OS}")
 
-    return video_player_class(
-        video_source=video_source,
-        start_from_frame=start_from_frame,
-        frame_edit_callbacks=frame_edit_callbacks,
-        record=record,
-        display_manager=display_manager,
-        input_parser=input_parser
-    )
+    return video_player

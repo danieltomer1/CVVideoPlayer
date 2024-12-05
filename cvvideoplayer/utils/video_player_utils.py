@@ -25,6 +25,12 @@ class KeyFunction:
     description: str
 
 
+class WindowStatus(Enum):
+    closed: str = "Closed"
+    in_focus: str = "In focus"
+    out_of_focus: str = "Out of focus"
+
+
 def get_frame_reader(video_source):
     if isinstance(video_source, (str, Path)):
         path = Path(video_source)
