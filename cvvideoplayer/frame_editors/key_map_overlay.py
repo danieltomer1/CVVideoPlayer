@@ -34,6 +34,11 @@ class KeyMapOverlay(BaseFrameEditCallback):
             color=self._font_color,
         )
         row += int(30 * self._font_scale)
+
+        keymap_description = video_player.input_handler.get_keymap_description()
+        if hasattr(video_player, "second_input_handler"):
+            keymap_description.update(video_player.second_input_handler.get_keymap_description())
+
         for callback_name, keys in video_player.input_handler.get_keymap_description().items():
             write_text_on_img(
                 frame,
