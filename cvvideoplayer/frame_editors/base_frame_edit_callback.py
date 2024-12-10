@@ -14,11 +14,9 @@ class BaseFrameEditCallback:
         self,
         enable_by_default: bool,
         enable_disable_key: Optional[str] = None,
-        additional_keyboard_shortcuts: Optional[List[KeyFunction]] = None,
     ):
         self._enabled = enable_by_default
         self._enable_disable_key = enable_disable_key
-        self._additional_keyboard_shortcuts = additional_keyboard_shortcuts
 
     """
     All implemented callbacks need to inherit this Base class
@@ -66,7 +64,7 @@ class BaseFrameEditCallback:
         self._enabled = not self._enabled
 
     @property
-    def key_function_to_register(self) -> List[KeyFunction]:
+    def additional_keyboard_shortcuts(self) -> List[KeyFunction]:
         """
         Optionally return a list of KeyFunctions to be registered once the frame editor is added to the video player
         Example:
@@ -83,6 +81,10 @@ class BaseFrameEditCallback:
                   )
               ]
         """
+        return []
+
+    @property
+    def key_function_to_register(self) -> List[KeyFunction]:
         key_function_list = []
         if self._enable_disable_key is not None:
             key_function_list.append(
@@ -92,7 +94,7 @@ class BaseFrameEditCallback:
                     description=f"Enable/Disable {self.__class__.__name__}",
                 )
             )
-        if self._additional_keyboard_shortcuts is not None:
-            assert all([isinstance(item, KeyFunction) for item in self._additional_keyboard_shortcuts])
-            key_function_list.extend(self._additional_keyboard_shortcuts)
+
+        assert all([isinstance(item, KeyFunction) for item in self.additional_keyboard_shortcuts])
+        key_function_list.extend(self.additional_keyboard_shortcuts)
         return key_function_list
