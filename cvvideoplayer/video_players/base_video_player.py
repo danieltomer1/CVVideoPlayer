@@ -99,7 +99,6 @@ class VideoPlayer:
             self.__exit__()
 
     def _open_player(self) -> None:
-        cv2.namedWindow(self._window_name, flags=cv2.WINDOW_FULLSCREEN)
         self._show_current_frame()
         self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
         self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
