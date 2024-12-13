@@ -16,11 +16,11 @@ from cvvideoplayer.frame_editors import (
 def run_player():
     video_player = create_video_player(
         video_source="../assets/example_video.mp4",
-        record=True,
+        record=False,
         frame_edit_callbacks=[
             FitFrameToScreen(),
+            HistogramEqualizer(enable_by_default=True),
             FrameNormalizer(),
-            HistogramEqualizer(),
             FrameInfoOverlay(),
             KeyMapOverlay(),
         ],

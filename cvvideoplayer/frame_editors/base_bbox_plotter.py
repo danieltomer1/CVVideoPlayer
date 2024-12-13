@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, List
 
+import numpy as np
+
 from ..frame_editors import BaseFrameEditCallback
 from ..utils.bbox_utils import Bbox, BboxFormat
 from ..utils.drawing_utils import draw_rectangle, draw_label
@@ -49,7 +51,14 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             KeyFunction(key="ctrl+u", func=lambda: self._change_font_size(-0.1), description="decrease label size"),
         ]
 
-    def edit_frame(self, frame, frame_num, original_frame, **kwargs):
+    def edit_frame(
+        self,
+        video_player: "VideoPlayer",
+        frame: np.ndarray,
+        frame_num: int,
+        original_frame: np.ndarray,
+    ) -> np.ndarray:
+
         for bbox in self.get_bboxes(
             edited_frame=frame,
             original_frame=original_frame,
@@ -58,15 +67,23 @@ class BaseBboxPlotter(BaseFrameEditCallback, ABC):
             norm_bbox = bbox.get_normalized_bbox(
                 frame_width=original_frame.shape[1],
                 frame_height=original_frame.shape[0],
-                bbox_format=BboxFormat.xywh,
             )
 
-            resized_bbox_coords = (
-                int(norm_bbox[0] * frame.shape[1]),
-                int(norm_bbox[1] * frame.shape[0]),
-                int(norm_bbox[2] * frame.shape[1]),
-                int(norm_bbox[3] * frame.shape[0]),
-            )
+            if video_player._zoom_crop_xywh_norm != (0, 0, 1, 1):
+                crop_x, crop_y, crop_w, crop_h = video_player._zoom_crop_xywh_norm
+                resized_bbox_coords = (
+                    int((norm_bbox.x1 - crop_x) / crop_w * frame.shape[1]),
+                    int((norm_bbox.y1 - crop_y) / crop_h * frame.shape[0]),
+                    int(norm_bbox.width / crop_w * frame.shape[1]),
+                    int(norm_bbox.height / crop_h * frame.shape[0]),
+                )
+            else:
+                resized_bbox_coords = (
+                    int(norm_bbox.x1 * frame.shape[1]),
+                    int(norm_bbox.y1 * frame.shape[0]),
+                    int(norm_bbox.width * frame.shape[1]),
+                    int(norm_bbox.height * frame.shape[0]),
+                )
 
             draw_rectangle(
                 frame,

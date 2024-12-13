@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 
 class BboxFormat(Enum):
@@ -11,10 +11,10 @@ class BboxFormat(Enum):
 
 @dataclass
 class Bbox:
-    x1: int
-    y1: int
-    width: int
-    height: int
+    x1: Union[int, float]
+    y1: Union[int, float]
+    width: Union[int, float]
+    height: Union[int, float]
     color: Optional[Tuple[int, int, int]] = None
     above_label: Optional[str] = None
     below_label: Optional[str] = None
@@ -43,19 +43,11 @@ class Bbox:
     def area(self):
         return self.width * self.height
 
-    def get_normalized_bbox(
-        self, frame_width: int, frame_height: int, bbox_format: BboxFormat = BboxFormat.xywh
-    ) -> Tuple[float, float, float, float]:
+    def get_normalized_bbox(self, frame_width: int, frame_height: int) -> "Bbox":
         frame_width = float(frame_width)
         frame_height = float(frame_height)
-        if bbox_format == BboxFormat.xywh:
-            return self.x1 / frame_width, self.y1 / frame_height, self.width / frame_width, self.height / frame_height
-        if bbox_format == BboxFormat.xyxy:
-            return self.x1 / frame_width, self.y1 / frame_height, self.x2 / frame_width, self.y2 / frame_height
-        if bbox_format == BboxFormat.xcycwh:
-            return (
-                self.x_center / frame_width,
-                self.y_center / frame_height,
-                self.width / frame_width,
-                self.height / frame_height,
-            )
+        x1 = self.x1 / frame_width
+        y1 = self.y1 / frame_height
+        width = self.width / frame_width
+        height = self.height / frame_height
+        return Bbox(x1, y1, width, height, self.color)

@@ -5,6 +5,15 @@ import win32gui
 import win32con
 import win32api
 from PIL.Image import Resampling
+import cv2
+
+
+def windows_rendering_fix(cls):
+    class Wrapper(cls):
+        def _show_frame(self, frame) -> None:
+            super()._show_frame(frame)
+            cv2.pollKey()  # for some reason Windows OS requires an additional waitKey to work properly
+    return Wrapper
 
 
 def set_icon_windows(window_name, icon_path):

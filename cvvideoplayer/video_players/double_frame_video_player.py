@@ -52,6 +52,13 @@ class DoubleFrameVideoPlayer(VideoPlayer):
         self._add_more_video_control_key_functions()
         self._setup_right_screen_callbacks()
 
+        current_frame = self._get_current_frame()
+        self._double_screen_adjusted_frame_size = calc_screen_adjusted_frame_size(
+            screen_size=self._screen_size,
+            frame_width=current_frame.shape[1] * 2 + self._border_size,
+            frame_height=current_frame.shape[0],
+        )
+
     def _setup_right_screen_callbacks(self):
         for callback in self._right_frame_callbacks:
             for key_function in callback.key_function_to_register:
@@ -139,12 +146,14 @@ class DoubleFrameVideoPlayer(VideoPlayer):
             only_corners=False
         )
 
-        screen_adjusted_frame_size = calc_screen_adjusted_frame_size(
-            screen_size=self._screen_size,
-            frame_width=double_frame.shape[1],
-            frame_height=double_frame.shape[0],
-        )
-
-        double_frame = cv2.resize(double_frame, screen_adjusted_frame_size)
+        double_frame = cv2.resize(double_frame, self._double_screen_adjusted_frame_size)
 
         return double_frame
+
+    def _get_norm_curser_position(self, curser_x, curser_y):
+        adjusted_width, adjusted_height = self._double_screen_adjusted_frame_size
+        norm_curser_position = (
+            ((curser_x / adjusted_width) % 0.5) / 0.5,
+            curser_y / adjusted_height,
+        )
+        return norm_curser_position

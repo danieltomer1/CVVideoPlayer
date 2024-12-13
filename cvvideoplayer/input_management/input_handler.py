@@ -40,6 +40,8 @@ class InputHandler:
             self._handle_keypress(key_str=single_input.input_data)
         elif single_input.input_type == InputType.MouseScroll:
             self._handle_mouse_scroll(*single_input.input_data)
+        elif single_input.input_type == InputType.MouseClick:
+            self._handle_mouse_click(*single_input.input_data)
 
     def _handle_keypress(self, key_str):
         key_without_modifiers = key_str.split("+")[-1]
@@ -66,3 +68,13 @@ class InputHandler:
         if curser_x < 0 or curser_y < 0:
             return
         self._keymap["mouse_scroll"][0].func(curser_x, curser_y, dy)
+
+    def _handle_mouse_click(self, x, y, mouse_button):
+        if "mouse_click" not in self._keymap:
+            return
+        win_x, win_y, win_w, win_h = cv2.getWindowImageRect(self._window_name)
+        curser_x = x - win_x
+        curser_y = y - win_y
+        if curser_x < 0 or curser_y < 0:
+            return
+        self._keymap["mouse_click"][0].func(curser_x, curser_y, mouse_button)

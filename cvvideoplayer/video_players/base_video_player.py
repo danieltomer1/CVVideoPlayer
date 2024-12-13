@@ -79,6 +79,17 @@ class VideoPlayer:
             frame_height=current_frame.shape[0],
         )
 
+        self._zoom_factor = 1.0
+        self._zoom_crop_xywh = None
+        self._original_frame_size = tuple(current_frame.shape[:2][::-1])
+        self._zoom_crop_xywh_norm = (0, 0, 1, 1)
+        self._zoom_crop_xywh = (
+            0,
+            0,
+            self._original_frame_size[0],
+            self._original_frame_size[1],
+        )
+
     def __enter__(self):
         return self
 
@@ -99,12 +110,17 @@ class VideoPlayer:
             self.__exit__()
 
     def _open_player(self) -> None:
+        cv2.namedWindow(self._window_name, cv2.WINDOW_AUTOSIZE | cv2.WINDOW_GUI_NORMAL)
         self._show_current_frame()
         self._window_id = self._display_manager.get_player_window_id(window_name=self._window_name)
         self._display_manager.set_icon(window_name=self._window_name, window_id=self._window_id)
         cv2.pollKey()
 
     def crop_and_resize_frame(self, frame) -> np.ndarray:
+        frame = frame[
+                self._zoom_crop_xywh[1]: self._zoom_crop_xywh[1] + self._zoom_crop_xywh[3],
+                self._zoom_crop_xywh[0]: self._zoom_crop_xywh[0] + self._zoom_crop_xywh[2],
+                ]
         frame = cv2.resize(frame, self._screen_adjusted_frame_size)
         return frame
 
@@ -232,6 +248,49 @@ class VideoPlayer:
             KeyFunction("ctrl+left", partial(self._pause_and_change_current_frame, -10), "10 frames back"),
             KeyFunction("ctrl+shift+right", partial(self._pause_and_change_current_frame, 50), "50 frames forward"),
             KeyFunction("ctrl+shift+left", partial(self._pause_and_change_current_frame, -50), "50 frames back"),
+            KeyFunction("mouse_click", func=self._set_zoom, description="Click to zoom in, right click to zoom out"),
             KeyFunction("esc", self._set_exit_to_true, "Exit gracefully"),
         ]
         return default_key_functions
+
+    def _set_zoom(self, curser_x: int, curser_y: int, mouse_button: int):
+        if mouse_button == "mouse_left":
+            self._zoom_factor = min(20.0, self._zoom_factor * 1.2)
+        else:
+            self._zoom_factor = max(1.0, self._zoom_factor / 1.2)
+        self._set_zoom_crop(curser_x, curser_y)
+
+    def _get_norm_curser_position(self, curser_x, curser_y):
+        adjusted_width, adjusted_height = self._screen_adjusted_frame_size
+        norm_curser_position = (
+            curser_x / adjusted_width,
+            curser_y / adjusted_height,
+        )
+        return norm_curser_position
+
+    def _set_zoom_crop(self, curser_x, curser_y):
+        norm_curser_position = self._get_norm_curser_position(curser_x, curser_y)
+
+        w = h = 1 / self._zoom_factor
+        prev_x_min, prev_y_min, prev_w, prev_h = self._zoom_crop_xywh_norm
+        x_min = prev_x_min + (norm_curser_position[0] * (prev_w - w))
+        y_min = prev_y_min + (norm_curser_position[1] * (prev_h - h))
+
+        if (x_min + w) > 1:
+            x_min = 1 - w
+        if (y_min + h) > 1:
+            y_min = 1 - h
+        if x_min < 0 or y_min < 0:
+            x_min = 0
+            y_min = 0
+            w = 1
+            h = 1
+
+        self._zoom_crop_xywh_norm = (x_min, y_min, w, h)
+
+        self._zoom_crop_xywh = (
+            int(self._original_frame_size[0] * x_min + 0.5),
+            int(self._original_frame_size[1] * y_min + 0.5),
+            int(self._original_frame_size[0] * w + 0.5),
+            int(self._original_frame_size[1] * h + 0.5),
+        )
